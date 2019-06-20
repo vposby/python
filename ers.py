@@ -1,4 +1,5 @@
 """
+Desktop/Software/Python/Sandbox/Early_Work
 Egyptian War!
 version 1.0 - no slaps, straight card play
 """
@@ -113,11 +114,11 @@ while invalid < 4:
 
 	player = []
 
-	for x in range(human):
-		player.append(str(input('Player ' + str(x+1) + ', what is your name? ')))
-
-	for x in range(computer):
-		player.append('Computer ' + str(x+1))
+	for x in range(players):
+		if x < human:
+			player.append([str(input('Player ' + str(x+1) + ', what is your name? ')),x,0])
+		else:
+			player.append(['Computer ' + str(x-human+1),x,0])
 
 	#deal cards evenly between players
 	order = 1
@@ -127,6 +128,7 @@ while invalid < 4:
 	for card in deck:
 		card[2]=player[person]
 		card[3]=order
+		player[person][2]+=1
 		dealt+=1
 		if dealt%(len(player)+1) == 0:
 			order+=1
@@ -134,12 +136,17 @@ while invalid < 4:
 			person+=1
 		else:
 			person = 0
+
+	print(player)
 	
 	#randomize starting player
-	starter = random.randrange(0,len(player+1))
-	print(player[starter] + ' will start!')
+	starter = random.randrange(0,len(player))
+	print(player[starter][0] + ' will start!')
 
 	#begin play
+	gameOver = False
+	handOver = False
+
 	
 	#if number, go to next player
 
