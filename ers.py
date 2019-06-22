@@ -87,19 +87,21 @@ while invalid < 4:
 				cChosen = True
 
 	player = []
-
-	for x in range(players):
-		if x < human:
+	namedPlayers = 0
+	while namedPlayers < players:
+		if namedPlayers < human:
 			invalid = 0
-			playerName = str(input('Player ' + str(x+1) + ', what is your name? '))
+			playerName = str(input('Player ' + str(namedPlayers+1) + ', what is your name? '))
 			if playerName == '':
 				print('Invalid entry! You have ' + str(3-invalid) + ' attempt(s) before the program closes.')
-				print('Please enter a digit between 1 and 3.')
+				print('Please enter your name.')
 				invalid+=1
 			else:
-				player.append([playerName,x,0,[]])
+				player.append([playerName,namedPlayers,0,[]])
+				namedPlayers+=1
 		else:
-			player.append(['Computer ' + str(x-human+1) + ' (' + cLevel[x-human][1] + ')',x,0,[]])
+			player.append([cLevel[namedPlayers-human][0] + ' (' + cLevel[namedPlayers-human][1] + ')',namedPlayers,0,[]])
+			namedPlayers+=1
 	
 	#randomize starting player
 	starter = random.randrange(0,len(player))
@@ -109,7 +111,9 @@ while invalid < 4:
 	for x in range(starter):
 		player.append(player[0])
 		player.pop(0)
-		player[len(player)-1][1] = x
+		if x == starter-1:
+			for y in range(len(player)):
+				player[y][1] = y
 
 	#deal cards evenly between players
 	order = 1
@@ -133,7 +137,6 @@ while invalid < 4:
 	while gameOver == False:
 		order = 0
 		hand = []
-		pprint.PrettyPrinter().pprint(player)
 
 		#if one player has all 52 cards, the game ends
 		for x in range(len(player)):
@@ -158,7 +161,7 @@ while invalid < 4:
 						print('Goodbye!')
 						sys.exit()
 					else:
-						if x+1>len(player):
+						if x+1==len(player):
 							nextPerson = 0
 						else:
 							nextPerson = x+1
@@ -171,6 +174,7 @@ while invalid < 4:
 								play+=1 #J=1, Q=2, K=3, A=4
 								if y == player[x][3][0][0]:
 									break
+							print(player[nextPerson][0] + ' must play ' + str(play) + ' cards.')
 							for y in range(play):
 								if player[nextPerson][3][0] == '':
 									print(player[x][0] + ', you are out of cards! Goodbye!')
