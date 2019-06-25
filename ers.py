@@ -1,31 +1,28 @@
 """
+Desktop/Software/Python/Sandbox/Card_Games
 Egyptian War!
 version 1.0 - no slaps, straight card play
 work on card play code
 """
 
-import pprint
 import sys
 import random
+import pprint
 
-#count number of invalid entries
-invalid = 0
+invalid = 0 #count number of invalid entries
 
-#numbers of players
 human = 0
 computer = 0
-players = human + computer
+players = human + computer #numbers of players
 
-#create cards
 values = ['Ace','2','3','4','5','6','7','8','9','10','Jack','Queen','King']
 suits = ['Hearts','Diamonds','Clubs','Spades']
 deck = []
-for suit in suits:
+for suit in suits: #create cards
 	for value in values:
 		deck.append([value,suit])
 
-#shuffle cards
-for x in range(5): 
+for x in range(5): #shuffle cards
 	for x in range(len(deck)):
 		move = random.randrange(0,len(deck))
 		deck.append(deck[move])
@@ -33,17 +30,15 @@ for x in range(5):
 
 print('Welcome to ERS! Up to six (6) players can participate.')
 
-#begin game code
-while invalid < 4:
+while 1: #begin game code
 	if invalid == 3:
 		print("You have made too many invalid entries. The program will now close.")
 		sys.exit()
 
-	#choose players
-	while players == 0:
+	while players == 0: #choose players
 		hChosen = cChosen = False
 		while hChosen == False: #how many human players? (1-6)
-			human = str(input('How many human players will there be? '))
+			human = str(input('\n' + 'How many human players will there be? '))
 			if human.isdigit() == False or int(human) < 1 or int(human) > 6: #if input has letters or is too small or large
 				print('Invalid entry! You have ' + str(3-invalid) + ' attempt(s) before the program closes.')
 				print('Please enter a digit between 1 and 6.')
@@ -57,7 +52,7 @@ while invalid < 4:
 				
 		invalid = 0
 		while cChosen == False: #how many computer players? (0-5)
-			computer = str(input('How many computer players will there be? '))
+			computer = str(input('\n' + 'How many computer players will there be? '))
 			cLevel = []
 			if computer.isdigit() == False or int(computer) < 0 or int(computer) > 6-human: #if input has letters or is too small or large
 				print('Invalid entry! You have ' + str(3-invalid) + ' attempt(s) before the program closes.')
@@ -71,7 +66,7 @@ while invalid < 4:
 				computer = int(computer)
 				if computer != 0: #choose computer player difficulty (slap speed in seconds)
 					for x in range(computer):
-						level = str(input('Choose Computer ' + str(x+1) + ' difficulty (1=Easy, 2=Medium, 3=Hard): '))
+						level = str(input('\n' + 'Choose Computer ' + str(x+1) + ' difficulty (1=Easy, 2=Medium, 3=Hard): '))
 						if level.isdigit() == False or int(level) < 1 or int(level) > 3: #if input has letters or is too small or large
 							print('Invalid entry! You have ' + str(3-invalid) + ' attempt(s) before the program closes.')
 							print('Please enter a digit between 1 and 3.')
@@ -86,111 +81,107 @@ while invalid < 4:
 				players = human + computer
 				cChosen = True
 
-	player = []
+	player = [] #player name, number of cards, cards in hand as list
 	namedPlayers = 0
 	while namedPlayers < players:
 		if namedPlayers < human:
 			invalid = 0
-			playerName = str(input('Player ' + str(namedPlayers+1) + ', what is your name? '))
+			playerName = str(input('\n' + 'Player ' + str(namedPlayers+1) + ', what is your name? '))
 			if playerName == '':
 				print('Invalid entry! You have ' + str(3-invalid) + ' attempt(s) before the program closes.')
 				print('Please enter your name.')
 				invalid+=1
 			else:
-				player.append([playerName,namedPlayers,0,[]])
+				player.append([playerName,0,[]])
 				namedPlayers+=1
 		else:
-			player.append([cLevel[namedPlayers-human][0] + ' (' + cLevel[namedPlayers-human][1] + ')',namedPlayers,0,[]])
+			player.append([cLevel[namedPlayers-human][0] + ' (' + cLevel[namedPlayers-human][1] + ')',0,[]])
 			namedPlayers+=1
 	
-	#randomize starting player
-	starter = random.randrange(0,len(player))
-	print(player[starter][0] + ' will start!')
+	starter = random.randrange(0,len(player)) #randomize starting player
+	print('\n' + player[starter][0] + ' will start!')
 
-	#rearrange player order
-	for x in range(starter):
+	for x in range(starter): #rearrange player order
 		player.append(player[0])
 		player.pop(0)
-		if x == starter-1:
-			for y in range(len(player)):
-				player[y][1] = y
 
-	#deal cards evenly between players
-	order = 1
-	dealt = 1
-	person = 0
+	x = 0
 
-	for card in deck:
-		player[person][3].append(card)
-		player[person][2]+=1
-		dealt+=1
-		if person+1 < len(player):
-			person+=1
+	for card in deck: #deal cards evenly between players
+		player[x][2].append(card)
+		player[x][1]+=1
+		if x+1 < len(player):
+			x+=1
 		else:
-			person = 0
-			order+=1
+			x = 0
 
-	#begin play
-	gameOver = False
-	handOver = False
+	for y in player: #list players, number of cards in players' hands
+		print('\n' + y[0] + ' has ' + str(y[1]) + ' cards.')
 	
-	while gameOver == False:
-		order = 0
-		hand = []
-
-		#if one player has all 52 cards, the game ends
-		for x in range(len(player)):
-			if len(player[x][3]) == 52:
-				print('Congratulations, ' + player[x][0] + '! You won the game!')
+	gameOver = False
+	
+	while gameOver == False: #begin play
+		
+		for y in player:
+			y[1] = len(y[2])
+			if y[1] == 52: #if one player has all 52 cards, the game ends
+				print('\n' + 'Congratulations, ' + y[0] + '! You won the game!')
 				print('Goodbye!')
-				sys.exit()
-			elif len(player[x][3]) == 0:
-				print(player[x][0] + ', you are out of cards! Goodbye!')
-				player.pop(x)
+				gameOver = True
 
 		#player must approve the start of each hand
-		print('Press Enter to play the next hand.')
+		print('\n' + 'Press Enter to start the next hand.')
 		if input('Any other entries will end the program. ') != '':
 			print('Goodbye!')
 			sys.exit()
 		else:
-			while handOver == False:
-				for x in range(len(player)):
-					print('Press Enter to play the next card.')
-					if input('Any other entries will end the program. ') != '':
-						print('Goodbye!')
-						sys.exit()
-					else:
-						if x+1==len(player):
-							nextPerson = 0
-						else:
-							nextPerson = x+1
+			pprint.pprint(player) #verify each hand is played accurately
+			handOver = False
+			person = order = 0
+			hand = [player[person][2][0]] #first card played
+			print('\n' + player[person][0] + ' played the ' + hand[order][0] + ' of ' + hand[order][1])
+			player[person][2].pop(0)
+			person = order = 1
 
-						if player[x][3][0][0] in ['Jack','Queen','King','Ace']: #next player places one card
-							hand.append(player[x][3][0])
-							player[x][3].pop(0)
-							play = 0
-							for y in ['Jack','Queen','King','Ace']:
-								play+=1 #J=1, Q=2, K=3, A=4
-								if y == player[x][3][0][0]:
-									break
-							print(player[nextPerson][0] + ' must play ' + str(play) + ' cards.')
-							for y in range(play):
-								if player[nextPerson][3][0] == '':
-									print(player[x][0] + ', you are out of cards! Goodbye!')
-									player.pop(x)
-								else:
-									hand.append(player[nextPerson][3][0])
-									player[nextPerson][3].pop(0)
-									if player[nextPerson][3][0][0] not in ['Jack','Queen','King','Ace'] and y == play:
-										print(player[x][0] + ' wins ' + str(len(hand)) + ' cards this hand!')
-										for card in hand:
-											player[x][3].append(card)
-										handOver = True
+			while handOver == False:
+				if hand[order-1][0] not in ['Jack','Queen','King','Ace']:
+					hand.append(player[person][2][0])
+					player[person][2].pop(0)
+					print('\n' + player[person][0] + ' played the ' + hand[order][0] + ' of ' + hand[order][1])				
+					order+=1
+					if person+1==len(player):
+						person = 0
+					else:
+						person = person+1
+				else: #if a face card is played
+					play = 0
+					for y in ['Jack','Queen','King','Ace']: #how many cards the next player must play
+						play+=1 #J=1, Q=2, K=3, A=4
+						if y == hand[order-1][0]:
+							break
+					print(player[person][0] + ' must play ' + str(play) + ' card(s).')
+					for y in range(play):
+						if player[person][2][0] == '':
+							print(player[person][0] + ', you are out of cards! Goodbye!')
+							player.pop(person)
+						else:
+							hand.append(player[person][2][0])
+							player[person][2].pop(0)
+							print('\n' + player[person][0] + ' played the ' + hand[order][0] + ' of ' + hand[order][1])
+							order+=1
+							if hand[order-1][0] not in ['Jack','Queen','King','Ace']: #if the card played is a number
+								if y == play-1: #if the last card played is a number
+									if person-1<0:
+										winner = len(player)-1
 									else:
-										hand.append(player[nextPerson][3][0])
-										player[nextPerson][3].pop(0)
-						else: #play continues as usual
-							hand.append(player[x][3][0])
-							player[x][3].pop(0)
-						pprint.PrettyPrinter().pprint(hand)
+										winner = person-1
+									print('\n' + player[winner][0] + ' wins ' + str(len(hand)) + ' cards this hand!')
+									for card in hand:
+										player[winner][2].append(card)
+									handOver = True
+							else: #if a face card or the maximum number of numbers is played
+								hand.append(player[person][2][0])
+								player[person][2].pop(0)
+								print('\n' + player[person][0] + ' played the ' + hand[order][0] + ' of ' + hand[order][1])
+								order+=1								
+								break
