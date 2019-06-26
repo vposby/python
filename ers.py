@@ -2,7 +2,7 @@
 Desktop/Software/Python/Sandbox/Card_Games
 Egyptian War!
 version 1.0 - no slaps, straight card play
-work on card play code
+version 1.1 - add game type: no slaps, slap on pairs, slap on sandwiches
 """
 
 import sys
@@ -105,29 +105,37 @@ while 1: #begin game code
 		player.append(player[0])
 		player.pop(0)
 
-	x = 0
+	person = 0
 
 	for card in deck: #deal cards evenly between players
-		player[x][2].append(card)
-		player[x][1]+=1
-		if x+1 < len(player):
-			x+=1
+		player[person][2].append(card)
+		player[person][1]+=1
+		if person+1 < len(player):
+			person+=1
 		else:
-			x = 0
+			person = 0
 
-	for y in player: #list players, number of cards in players' hands
-		print('\n' + y[0] + ' has ' + str(y[1]) + ' cards.')
+	for person in player: #list players, number of cards in players' hands
+		print('\n' + person[0] + ' has ' + str(person[1]) + ' cards.')
 	
 	gameOver = False
+	winner = ''
 	
 	while gameOver == False: #begin play
+		remove = []
 		
-		for y in player:
+		for x, y in enumerate(player):
 			y[1] = len(y[2])
-			if y[1] == 52: #if one player has all 52 cards, the game ends
+			if y[1] == 0: #if one player has played all of their cards, they are removed
+				print('\n' + 'Sorry, ' + y[0] + ', you\'re out of cards!')
+				remove.append(x)
+			elif y[1] == 52: #if one player has all 52 cards, the game ends
 				print('\n' + 'Congratulations, ' + y[0] + '! You won the game!')
 				print('Goodbye!')
-				gameOver = True
+				sys.exit()
+
+		for x in remove:
+			player.pop(x)
 
 		#player must approve the start of each hand
 		print('\n' + 'Press Enter to start the next hand.')
@@ -137,14 +145,26 @@ while 1: #begin game code
 		else:
 			pprint.pprint(player) #verify each hand is played accurately
 			handOver = False
-			person = order = 0
+			order = 0
+
+			if winner == '': #decide who starts the hand
+				person = 0
+			else:
+				if winning+1==len(player):
+					person = 0
+				else:
+					person+=1
+
 			hand = [player[person][2][0]] #first card played
 			print('\n' + player[person][0] + ' played the ' + hand[order][0] + ' of ' + hand[order][1])
 			player[person][2].pop(0)
-			person = order = 1
+			order+=1
 
 			while handOver == False:
-				if hand[order-1][0] not in ['Jack','Queen','King','Ace']:
+				if len(player[person][2]) == 0:
+					print('\n' + 'Sorry, ' + player[person][0] + ', you\'re out of cards! Goodbye!')
+					player.pop(person)
+				elif hand[order-1][0] not in ['Jack','Queen','King','Ace']:
 					hand.append(player[person][2][0])
 					player[person][2].pop(0)
 					print('\n' + player[person][0] + ' played the ' + hand[order][0] + ' of ' + hand[order][1])				
@@ -152,17 +172,22 @@ while 1: #begin game code
 					if person+1==len(player):
 						person = 0
 					else:
-						person = person+1
+						person+=1
 				else: #if a face card is played
 					play = 0
-					for y in ['Jack','Queen','King','Ace']: #how many cards the next player must play
+					played = 0
+					for x in ['Jack','Queen','King','Ace']: #how many cards the next player must play
 						play+=1 #J=1, Q=2, K=3, A=4
-						if y == hand[order-1][0]:
+						if x == hand[order-1][0]:
 							break
 					print(player[person][0] + ' must play ' + str(play) + ' card(s).')
-					for y in range(play):
-						if player[person][2][0] == '':
-							print(player[person][0] + ', you are out of cards! Goodbye!')
+					
+					while played < play:
+						if person == len(player): #if last player exits game, first player is next
+							person = 0
+
+						if len(player[person][2]) == 0:
+							print('\n' + 'Sorry, ' + player[person][0] + ', you\'re out of cards! Goodbye!')
 							player.pop(person)
 						else:
 							hand.append(player[person][2][0])
@@ -170,18 +195,21 @@ while 1: #begin game code
 							print('\n' + player[person][0] + ' played the ' + hand[order][0] + ' of ' + hand[order][1])
 							order+=1
 							if hand[order-1][0] not in ['Jack','Queen','King','Ace']: #if the card played is a number
-								if y == play-1: #if the last card played is a number
+								if played == play-1:
 									if person-1<0:
-										winner = len(player)-1
+										winning = len(player)-1
 									else:
-										winner = person-1
-									print('\n' + player[winner][0] + ' wins ' + str(len(hand)) + ' cards this hand!')
+										winning = person-1
+									winner = player[winning][0]
+									print('\n' + winner + ' wins ' + str(len(hand)) + ' cards this hand!')
 									for card in hand:
-										player[winner][2].append(card)
+										player[winning][2].append(card)
+									person = winning
 									handOver = True
 							else: #if a face card or the maximum number of numbers is played
-								hand.append(player[person][2][0])
-								player[person][2].pop(0)
-								print('\n' + player[person][0] + ' played the ' + hand[order][0] + ' of ' + hand[order][1])
-								order+=1								
+								if person+1==len(player):
+									person = 0
+								else:
+									person+=1
 								break
+							played+=1
