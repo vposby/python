@@ -4,9 +4,7 @@ Egyptian War!
 version 1.0 - no slaps, straight card play
 """
 
-import sys
-import random
-import pprint
+import sys, random
 
 def rearrange(listInput,index):
 	listInput.append(listInput[index])
