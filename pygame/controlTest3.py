@@ -1,5 +1,4 @@
 """
-Desktop/Software/Python/Pygame
 Draw eight red circles at different
 positions, then change their positions
 in a linear fashion. If they hit the
@@ -25,15 +24,10 @@ size = width, height = (512, 512)
 black = (0,0,0)
 white = (255,255,255)
 red = (255,0,0)
-orange = (255,128,0)
 yellow = (255,255,0)
 green = (0,224,0)
-cyan = (0,255,255)
-blue = (0,0,255)
-purple = (128,0,128)
-pink = (255,0,255)
 
-pos=[]
+pos=[] #x coordinate, y coordinate, coordinate pair
 pos.append([int(width/2),int(height/4),(int(width/2),int(height/4))]) #N
 pos.append([int(2*width/3),int(height/3),(int(2*width/3),int(height/3))]) #NE
 pos.append([int(3*width/4),int(height/2),(int(3*width/4),int(height/2))]) #E
@@ -50,15 +44,9 @@ screen.fill(black)
 #pygame.mouse.set_visible(False)
 screenFont = pygame.font.Font(None, 48) #in case I need to display values
 
-nCir = pygame.draw.circle(screen,red,pos[0][2],cirSize)
-neCir = pygame.draw.circle(screen,red,pos[1][2],cirSize)
-eCir = pygame.draw.circle(screen,red,pos[2][2],cirSize)
-seCir = pygame.draw.circle(screen,red,pos[3][2],cirSize)
-sCir = pygame.draw.circle(screen,red,pos[4][2],cirSize)
-swCir = pygame.draw.circle(screen,red,pos[5][2],cirSize)
-wCir = pygame.draw.circle(screen,red,pos[6][2],cirSize)
-nwCir = pygame.draw.circle(screen,red,pos[7][2],cirSize)
-playerCir = pygame.draw.circle(screen,green,pos[8][2],cirSize)
+for x in range(len(pos)-1):
+	pygame.draw.circle(screen,red,pos[x][2],cirSize)
+pygame.draw.circle(screen,green,pos[8][2],cirSize)
 outN = outNE = outE = outSE = outS = outSW = outW = outNW = True
 
 shotCount = 0
@@ -67,7 +55,7 @@ shot=[]
 while 1:
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT: sys.exit()
-	
+
 	pressed = pygame.key.get_pressed()
 	if pressed[pygame.K_ESCAPE]: sys.exit()
 
@@ -76,21 +64,18 @@ while 1:
 	#move circles
 	for cir in range(0,len(pos)):
 		if cir==0: #N
+			x=pos[cir][0]
 			if outN==True:
 				if pos[cir][1]-1>25:
-					x=pos[cir][0]
 					pos[cir][1]=y=pos[cir][1]-1
 				else:
 					outN=False
-					x=pos[cir][0]
 					pos[cir][1]=y=pos[cir][1]+1
 			else:
 				if pos[cir][1]+1<487:
-					x=pos[cir][0]
 					pos[cir][1]=y=pos[cir][1]+1
 				else:
 					outN=True
-					x=pos[cir][0]
 					pos[cir][1]=y=pos[cir][1]-1
 		elif cir==1: #NE
 			if outNE==True:
@@ -108,24 +93,21 @@ while 1:
 				else:
 					outNE=True
 					pos[cir][0]=x=pos[cir][0]+1
-					pos[cir][1]=y=pos[cir][1]-1			
+					pos[cir][1]=y=pos[cir][1]-1
 		elif cir==2: #E
+			y=pos[cir][1]
 			if outE==True:
 				if pos[cir][0]+1<487:
 					pos[cir][0]=x=pos[cir][0]+1
-					y=pos[cir][1]
 				else:
 					outE=False
 					pos[cir][0]=x=pos[cir][0]-1
-					y=pos[cir][1]
 			else:
 				if pos[cir][0]-1>25:
 					pos[cir][0]=x=pos[cir][0]-1
-					y=pos[cir][1]
 				else:
 					outE=True
 					pos[cir][0]=x=pos[cir][0]+1
-					y=pos[cir][1]
 		elif cir==3: #SE
 			if outSE==True:
 				if pos[cir][1]+1<487:
@@ -144,21 +126,18 @@ while 1:
 					pos[cir][0]=x=pos[cir][0]+1
 					pos[cir][1]=y=pos[cir][1]+1
 		elif cir==4: #S
+			x=pos[cir][0]
 			if outS==True:
 				if pos[cir][1]+1<487:
-					x=pos[cir][0]
 					pos[cir][1]=y=pos[cir][1]+1
 				else:
 					outS=False
-					x=pos[cir][0]
 					pos[cir][1]=y=pos[cir][1]-1
 			else:
 				if pos[cir][1]-1>25:
-					x=pos[cir][0]
 					pos[cir][1]=y=pos[cir][1]-1
 				else:
 					outS=True
-					x=pos[cir][0]
 					pos[cir][1]=y=pos[cir][1]+1
 		elif cir==5: #SW
 			if outSW==True:
@@ -178,22 +157,19 @@ while 1:
 					pos[cir][0]=x=pos[cir][0]-1
 					pos[cir][1]=y=pos[cir][1]+1
 		elif cir==6: #W
+			y=pos[cir][1]
 			if outW==True:
 				if pos[cir][0]-1>25:
 					pos[cir][0]=x=pos[cir][0]-1
-					y=pos[cir][1]
 				else:
 					outW=False
 					pos[cir][0]=x=pos[cir][0]+1
-					y=pos[cir][1]
 			else:
 				if pos[cir][0]+1<487:
 					pos[cir][0]=x=pos[cir][0]+1
-					y=pos[cir][1]
 				else:
 					outW=True
 					pos[cir][0]=x=pos[cir][0]-1
-					y=pos[cir][1]
 		elif cir==7: #NW
 			if outNW==True:
 				if pos[cir][0]-1>25:
@@ -280,7 +256,7 @@ while 1:
 		shotStart=[x,y,(x,y)]
 		shotFin=[x,y,(x,y)]
 		if pressed[pygame.K_UP]: #N
-			pygame.key.set_repeat(500,250)
+			pygame.key.set_repeat(750,500)
 			shotStart[1]-=20
 			shotStart[2]=(shotStart[0],shotStart[1])
 			shotFin[1]-=30
@@ -288,7 +264,7 @@ while 1:
 			shotCount+=1
 			shot.append(["N",shotStart,shotFin])
 		elif pressed[pygame.K_RIGHT]: #E
-			pygame.key.set_repeat(500,250)
+			pygame.key.set_repeat(750,500)
 			shotStart[0]+=20
 			shotStart[2]=(shotStart[0],shotStart[1])
 			shotFin[0]+=30
@@ -296,7 +272,7 @@ while 1:
 			shotCount+=1
 			shot.append(["E",shotStart,shotFin])
 		elif pressed[pygame.K_DOWN]: #S
-			pygame.key.set_repeat(500,250)
+			pygame.key.set_repeat(750,500)
 			shotStart[1]+=20
 			shotStart[2]=(shotStart[0],shotStart[1])
 			shotFin[1]+=30
@@ -304,7 +280,7 @@ while 1:
 			shotCount+=1
 			shot.append(["S",shotStart,shotFin])
 		elif pressed[pygame.K_LEFT]: #W
-			pygame.key.set_repeat(500,250)
+			pygame.key.set_repeat(750,500)
 			shotStart[0]-=20
 			shotStart[2]=(shotStart[0],shotStart[1])
 			shotFin[0]-=30
@@ -313,6 +289,7 @@ while 1:
 			shot.append(["W",shotStart,shotFin])
 	#move line segment in previously-specified direction
 	shotNum=0
+	pygame.key.set_repeat()
 	while shotNum<shotCount:
 		if shot[shotNum][0]=="N":
 			shot[shotNum][1][1]-=3
@@ -356,20 +333,13 @@ while 1:
 				shot.pop(shotNum-1)
 				shotNum-=1
 
-	nCir = pygame.draw.circle(screen,red,pos[0][2],cirSize)
-	neCir = pygame.draw.circle(screen,red,pos[1][2],cirSize)
-	eCir = pygame.draw.circle(screen,red,pos[2][2],cirSize)
-	seCir = pygame.draw.circle(screen,red,pos[3][2],cirSize)
-	sCir = pygame.draw.circle(screen,red,pos[4][2],cirSize)
-	swCir = pygame.draw.circle(screen,red,pos[5][2],cirSize)
-	wCir = pygame.draw.circle(screen,red,pos[6][2],cirSize)
-	nwCir = pygame.draw.circle(screen,red,pos[7][2],cirSize)
-	playerCir = pygame.draw.circle(screen,green,pos[8][2],cirSize)
-	#shotsNum=screenFont.render(str(shotCount),1,white)
-	#screen.blit(shotsNum,(256,0))
+	for x in range(len(pos)-1):
+		pygame.draw.circle(screen,red,pos[x][2],cirSize)
+	pygame.draw.circle(screen,green,pos[8][2],cirSize)
+	screen.blit(screenFont.render(str(shotCount),1,white),(256,0))
 
 	for x in range(0,shotCount):
 		pygame.draw.line(screen,yellow,shot[x][1][2],shot[x][2][2],4)
-	
-	pygame.key.set_repeat()
+
+
 	pygame.display.update()

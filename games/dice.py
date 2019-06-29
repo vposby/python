@@ -21,7 +21,7 @@ attempted = 0
 result = "Invalid entry!"
 
 
-print("Welcome! You can roll up to 6 times.")
+print("Welcome! You can roll the dice up to 6 times.")
 while invalid < 4:
 	#exit program after too many invalid entries
 	if invalid == 3:
