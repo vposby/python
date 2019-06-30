@@ -1,8 +1,4 @@
 """
-<<<<<<< HEAD
-=======
-Desktop/Software/Python/Sandbox/Card_Games
->>>>>>> 51a91a51e3a45dd6476c4d506b49c929ce1f85a5
 Egyptian War!
 version 1.0 - no slaps, straight card play
 """
@@ -19,11 +15,7 @@ def printInvalid(message):
 	if invalid < 4:
 		print('Invalid entry! You have ' + str(4-invalid) + ' attempt(s) before the program closes.')
 		print(message)
-<<<<<<< HEAD
 
-=======
-	
->>>>>>> 51a91a51e3a45dd6476c4d506b49c929ce1f85a5
 def checkInvalid():
 	global invalid
 	if invalid == 4:
@@ -61,11 +53,7 @@ def removePlayer(playerIndex):
 values = ['Ace','2','3','4','5','6','7','8','9','10','Jack','Queen','King']
 suits = ['Hearts','Diamonds','Clubs','Spades']
 deck = []
-<<<<<<< HEAD
 for suit in suits: #create deck
-=======
-for suit in suits: #create cards
->>>>>>> 51a91a51e3a45dd6476c4d506b49c929ce1f85a5
 	for value in values:
 		deck.append([value,suit])
 
@@ -78,11 +66,8 @@ print('Welcome to ERS! Up to six (6) players can participate.')
 while 1: #begin game code
 	human = 0
 	computer = 0
-<<<<<<< HEAD
 	players = human + computer
-=======
-	players = human + computer 
->>>>>>> 51a91a51e3a45dd6476c4d506b49c929ce1f85a5
+
 	hChosen = cChosen = False #numbers of players
 	invalid = 0 #count number of invalid entries
 	while hChosen == False: #how many human players? (1-6)
@@ -96,11 +81,7 @@ while 1: #begin game code
 				players = human + computer
 				cChosen = True
 			hChosen = True
-<<<<<<< HEAD
 
-=======
-		
->>>>>>> 51a91a51e3a45dd6476c4d506b49c929ce1f85a5
 	invalid = 0	#reset invalid counter
 	while cChosen == False: #how many computer players? (0-5)
 		checkInvalid()
@@ -121,15 +102,9 @@ while 1: #begin game code
 						if int(level) == 1: #1.5 to 2 seconds, 66% chance to slap
 							cLevel.append(['Computer ' + str(x+1),'Easy'])
 						elif int(level) == 2: #1 to 1.5 seconds, 75% chance to slap
-<<<<<<< HEAD
 							cLevel.append(['Computer ' + str(x+1),'Medium'])
 						else: #0.5 to 1 seconds, 100% chance to slap
 							cLevel.append(['Computer ' + str(x+1),'Hard'])
-=======
-							cLevel.append(['Computer ' + str(x+1),'Medium']) 
-						else: #0.5 to 1 seconds, 100% chance to slap
-							cLevel.append(['Computer ' + str(x+1),'Hard']) 
->>>>>>> 51a91a51e3a45dd6476c4d506b49c929ce1f85a5
 			players = human + computer
 			cChosen = True
 
@@ -148,11 +123,7 @@ while 1: #begin game code
 		else:
 			player.append([cLevel[namedPlayers-human][0] + ' (' + cLevel[namedPlayers-human][1] + ')',0,[]])
 			namedPlayers+=1
-<<<<<<< HEAD
 
-=======
-	
->>>>>>> 51a91a51e3a45dd6476c4d506b49c929ce1f85a5
 	starter = random.randrange(0,len(player)) #randomize starting player
 	print('\n' + player[starter][0] + ' will start!')
 
@@ -183,11 +154,7 @@ while 1: #begin game code
 			handOver = False
 			playCard(person, handNum)
 			chooseNext()
-<<<<<<< HEAD
 
-=======
-			
->>>>>>> 51a91a51e3a45dd6476c4d506b49c929ce1f85a5
 			while handOver == False:
 				#if the played card requires a slap
 				if hand[len(hand)-1][0] not in ['Jack','Queen','King','Ace']: #if a number is played
@@ -201,11 +168,7 @@ while 1: #begin game code
 						if x == hand[len(hand)-1][0]:
 							break
 					print(player[person][0] + ' must play ' + str(play) + ' card(s).')
-<<<<<<< HEAD
 
-=======
-					
->>>>>>> 51a91a51e3a45dd6476c4d506b49c929ce1f85a5
 					while played < play: #play the required number of cards
 						playCard(person, handNum)
 						if hand[len(hand)-1][0] in ['Jack','Queen','King','Ace']: #if a face card is played
@@ -226,8 +189,4 @@ while 1: #begin game code
 									p[1] = len(p[2])
 									print(p[0] + ' has ' + str(p[1]) + ' cards.')
 								handOver = True
-<<<<<<< HEAD
 						played+=1
-=======
-						played+=1
->>>>>>> 51a91a51e3a45dd6476c4d506b49c929ce1f85a5
