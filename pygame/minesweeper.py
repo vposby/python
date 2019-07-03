@@ -68,7 +68,7 @@ def screenChange(screenNum):
 		#high scores button
 		pygame.draw.rect(screen,purple,(width/4,32*height/40,width/2,5*height/40))
 		screen.blit(menuFont.render("High Scores",1,white),((width/4)+6,(16*height/20)+18))
-	#size selection screen	
+	#size selection screen
 	elif screenNum==2:
 		#back to home
 		pygame.draw.rect(screen,blue,(4*width/5,height/20,width/10,width/10))
@@ -99,7 +99,7 @@ def screenChange(screenNum):
 			screen.blit(numFont.render(str(custWd),1,black),(boxx,23*height/50))
 			screen.blit(numFont.render(str(custHt),1,black),(boxx,27*height/50))
 			pygame.draw.rect(screen,black,(11*width/32,59*height/100,width/8,height/25),2)
-			screen.blit(textFont.render("Start",1,black),((11*width/32)+(3*width/100),(59*height/100)+(height/100)))	
+			screen.blit(textFont.render("Start",1,black),((11*width/32)+(3*width/100),(59*height/100)+(height/100)))
 			pygame.draw.rect(screen,black,(17*width/32,59*height/100,width/8,height/25),2)
 			screen.blit(textFont.render("Cancel",1,black),((17*width/32)+(3*width/200),(59*height/100)+(height/100)))
 	#directions screen
@@ -114,7 +114,7 @@ def screenChange(screenNum):
 		pygame.draw.rect(screen,blue,(4*width/5,height/20,width/10,width/10))
 		drawHouse(4*width/5,height/20,width/10,width/10)
 		screen.blit(titleFont.render("High Scores",1,white),(width/8.5,2*height/20))
-	return;
+	pygame.display.update()
 
 #generate the next field
 def fieldGen(gameMode):
@@ -137,8 +137,6 @@ def fieldGen(gameMode):
 			pygame.draw.rect(screen,grey,((x+1)*(width/gameMode[0]),(y+1)*(height/gameMode[1]),
 			width/gameMode[0],width/gameMode[0]))
 			pygame.display.update()
-	#pygame.display.update()
-	return;
 
 #check if cell has mine
 def cellCheck(cellPos):
@@ -149,17 +147,15 @@ def cellCheck(cellPos):
 		#if mine exists at location, remove and place at topmost/leftmost square
 		screen.fill(black)
 		screen.blit(titleFont.render("Game Screen",1,white),(width/2,height/2))
-	return;
 
 #show beginning screen
 screen.fill(black)
-screenNum=1
 screenChange(1)
 
 while 1:
 	for event in pygame.event.get():
 		if event.type==pygame.QUIT: sys.exit()
-	
+
 	clicked=pygame.mouse.get_pos()
 
 	if screenNum==2 and custMenu==True:
@@ -178,7 +174,7 @@ while 1:
 					#downscroll
 					elif event.type==pygame.MOUSEBUTTONUP and event.button==4 and custHt>10:
 						custHt-=1
-				
+
 				if clicked[1]>59*height/100 and clicked[1]<63*height/100:
 					if event.type==pygame.MOUSEBUTTONDOWN and event.button==1:
 						#start
@@ -193,32 +189,28 @@ while 1:
 						elif clicked[0]>17*width/32 and clicked[0]<21*width/32:
 							custMenu=False
 							screenChange(2)
-	
+
 	if event.type==pygame.MOUSEBUTTONDOWN and event.button==1:
-		
+
 		#main menu screen
 		if screenNum==1:
 			if clicked[0]>width/4 and clicked[0]<3*width/4:
 				#go to size selection screen
 				if clicked[1]>20*height/40 and clicked[1]<25*height/40:
-					screenNum=2
 					custMenu=False
 					screenChange(2)
 				#go to high score screen
 				elif clicked[1]>26*height/40 and clicked[1]<31*height/40:
-					screenNum=3
 					screenChange(3)
 				#go to directions screen
 				elif clicked[1]>32*height/40 and clicked[1]<37*height/40:
-					screenNum=4
 					screenChange(4)
-		
+
 		#game screen
 		elif screenNum==2:
 			if clicked[1]>height/20 and clicked[1]<(height/20)+(width/10):
 				#go to main menu
 				if clicked[0]>4*width/5 and clicked[0]<9*width/10:
-					screenNum=1
 					screenChange(1)
 			elif clicked[1]>6*height/20 and clicked[1]<(6*height/20)+(5*width/12):
 				if clicked[0]>width/15 and clicked[0]<(width/15)+(5*width/12):
@@ -245,26 +237,20 @@ while 1:
 					"""
 				elif clicked[0]>8*width/15 and clicked[0]<(8*width/15)+(5*width/12) and custMenu==False:
 					custMenu=True
-					screenChange(2)				
-			
-		#directions screen			
+					screenChange(2)
+
+		#directions screen
 		elif screenNum==3:
 			if clicked[1]>height/20 and clicked[1]<(height/20)+(width/10):
 				#main menu
 				if clicked[0]>4*width/5 and clicked[0]<9*width/10:
-					screenNum=1
 					screenChange(1)
-		
+
 		#high score screen
 		elif screenNum==4:
 			if clicked[1]>height/20 and clicked[1]<(height/20)+(width/10):
 				#main menu
 				if clicked[0]>4*width/5 and clicked[0]<9*width/10:
-					screenNum=1
 					screenChange(1)
 
 		#add delay between click detections?
-	
-	pygame.display.update()
-	
-

@@ -1,17 +1,87 @@
 """
 Egyptian War!
-version 1.0 - no slaps, straight card play
+v 2.0 - straight card play, single player, pygame gui
 """
 
-import sys, random, pprint
+import sys, random, pprint, pygame
+pygame.init()
 
-def rearrange(listInput,index):
+size = width, height = (512, 338)
+black = (0, 0, 0)
+white = (255, 255, 255)
+grey = (196, 196, 196)
+red = (224, 0, 0)
+orange = (255, 128, 0)
+yellow = (224, 224, 0)
+green = (0, 224, 0)
+cyan = (0, 255, 255)
+blue = (0, 0, 224)
+purple = (128, 0, 128)
+pink = (224, 0, 224)
+
+screen = pygame.display.set_mode(size)
+pygame.display.set_caption('Egyptian War')
+lrgFont = pygame.font.Font(None, 60)
+medFont = pygame.font.Font(None, 45)
+smlFont = pygame.font.Font(None, 30)
+tnyFont = pygame.font.Font(None, 15)
+screenObject = [] #track rendered objects onscreen
+
+#BEGIN GUI FUNCTIONS
+def screenChange(screenName):
+	screen.fill(black)
+	if screenName=='Lobby': #game setting selection
+		#render order (comment placeholders)
+		gameTitle=lrgFont.render('Egyptian War',1,white) #game title
+		trackRender(gameTitle,())
+		competitorCount=medFont.render('Number of Competitors',1,white) #competitor count label
+		trackRender(competitorCount,())
+		#competitor count slider (three components; bg color rect, white line, grey circle)
+		#competitor count slider value
+		#for x in range(competitor count):
+			#competitor difficulty labels
+			#competitor difficulty sliders (three components; bg color rect, white line, grey circle)
+			#competitor difficulty slider values
+		#rules label
+		#slaps checkbox
+		#rules checkboxes
+		#new game button
+		#continue game button
+
+	elif screenName=='Game': #actual game
+		#render order (comment placeholders)
+		#play/pause button
+		#playerOrbit (invisible ellipse to guide player "hands")
+		#for person in player:
+			#cardBack.jpg
+			#player name
+			#number of cards
+		#last played card (displayed larger than player hands, centered)
+		screen.blit(font.render(historyOutput,1,white),(width/6,3*height/20)) #list of events
+
+def trackRender(objectName,objectPos):
+	screenObject.append([objectName,objectPos])
+	screen.blit(screenObject[len(screenObject)-1][0],screenObject[len(screenObject)-1][1])
+
+def renderSlider(x,y,width,height):
+	pygame.draw.rect() #bg color rect
+	pygame.draw.line() #white line
+	pygame.draw.circle() #grey circle
+
+def sliderClick(mouseX,mouseY):
+	for scrObj in screenObject:
+		if mouseX<
+
+#END GUI FUNCTIONS
+
+#BEGIN GAMEPLAY FUNCTIONS
+def rearrange(listInput, index):
 	listInput.append(listInput[index])
 	listInput.pop(index)
 
 def printInvalid(message):
 	global invalid
-	invalid+=1
+	invalid += 1
 	if invalid < 4:
 		print('Invalid entry! You have ' + str(4-invalid) + ' attempt(s) before the program closes.')
 		print(message)
@@ -19,7 +89,7 @@ def printInvalid(message):
 def checkInvalid():
 	global invalid
 	if invalid == 4:
-		print("You have made too many invalid entries. The program will now close.")
+		print('You have made too many invalid entries. The program will now close.')
 		sys.exit()
 
 def playCard(playerIndex, handIndex):
@@ -41,7 +111,7 @@ def playCard(playerIndex, handIndex):
 
 def chooseNext():
 	global person
-	if person+1>=len(player):
+	if person + 1 >= len(player):
 		person = 0
 	else:
 		person+=1
@@ -49,21 +119,31 @@ def chooseNext():
 def removePlayer(playerIndex):
 	print('\nSorry, ' + player[playerIndex][0] + ', you\'re out of cards! Goodbye!')
 	player.pop(playerIndex)
+#END GAMEPLAY FUNCTIONS
 
 values = ['Ace','2','3','4','5','6','7','8','9','10','Jack','Queen','King']
 suits = ['Hearts','Diamonds','Clubs','Spades']
 deck = []
 for suit in suits: #create deck
 	for value in values:
-		deck.append([value,suit])
+		deck.append([value, suit])
 
-for x in range(random.randrange(5,11)): #shuffle cards
+for x in range(random.randrange(5, 11)): #shuffle cards
 	for y in range(len(deck)):
-		rearrange(deck,random.randrange(0,len(deck)))
+		rearrange(deck,random.randrange(0, len(deck)))
 
+screen.fill(black)
+screenChange('Lobby')
 print('Welcome to ERS! Up to six (6) players can participate.')
 
 while 1: #begin game code
+	for event in pygame.event.get():
+		if event.type == pygame.QUIT: sys.exit()
+
+	pressed = pygame.key.get_pressed()
+
+	screen.fill(black)
+
 	human = 0
 	computer = 0
 	players = human + computer
