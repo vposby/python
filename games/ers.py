@@ -36,6 +36,7 @@ def screenChange(screenName):
 		trackRender(gameTitle,())
 		competitorCount=medFont.render('Number of Competitors',1,white) #competitor count label
 		trackRender(competitorCount,())
+		renderSlider()
 		#competitor count slider (three components; bg color rect, white line, grey circle)
 		#competitor count slider value
 		#for x in range(competitor count):
@@ -64,13 +65,13 @@ def trackRender(objectName,objectPos):
 	screen.blit(screenObject[len(screenObject)-1][0],screenObject[len(screenObject)-1][1])
 
 def renderSlider(x,y,width,height):
-	pygame.draw.rect() #bg color rect
-	pygame.draw.line() #white line
-	pygame.draw.circle() #grey circle
+	pygame.draw.rect(screen,black) #bg color rect
+	pygame.draw.line(screen,white,(x,y),(x+(),y)) #white line
+	pygame.draw.circle(screen,grey) #grey circle
 
 def sliderClick(mouseX,mouseY):
 	for scrObj in screenObject:
-		if mouseX<
+		if mouseX>scrObj and mouseX<10
 
 #END GUI FUNCTIONS
 
