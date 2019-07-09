@@ -30,13 +30,16 @@ screenObject = [] #track rendered objects onscreen
 #BEGIN GUI FUNCTIONS
 def screenChange(screenName):
 	screen.fill(black)
-	if screenName=='Lobby': #game setting selection
+	if screenName == 'Lobby': #game setting selection
 		#render order (comment placeholders)
 		gameTitle=lrgFont.render('Egyptian War',1,white) #game title
-		trackRender(gameTitle,())
-		competitorCount=medFont.render('Number of Competitors',1,white) #competitor count label
-		trackRender(competitorCount,())
-		renderSlider()
+		titleLocation = gameTitle.get_rect(center=(width/2,height/10))
+		trackRender(gameTitle,(titleLocation))
+		compHeader=medFont.render('Player Options:',1,white)
+		trackRender(compHeader,(width/10,3*height/25))
+		compCountLabel=medFont.render('Number of Competitors',1,white) #competitor count label
+		trackRender(compCountLabel,(width/10,4*height/25))
+		renderSlider(width/4,4*height/25,width/6,height/25,5) #competitor count slider, default 1
 		#competitor count slider (three components; bg color rect, white line, grey circle)
 		#competitor count slider value
 		#for x in range(competitor count):
@@ -64,14 +67,17 @@ def trackRender(objectName,objectPos):
 	screenObject.append([objectName,objectPos])
 	screen.blit(screenObject[len(screenObject)-1][0],screenObject[len(screenObject)-1][1])
 
-def renderSlider(x,y,width,height):
-	pygame.draw.rect(screen,black) #bg color rect
-	pygame.draw.line(screen,white,(x,y),(x+(),y)) #white line
-	pygame.draw.circle(screen,grey) #grey circle
+def renderSlider(x,y,width,height,subdivs):
+	pygame.draw.rect(screen,black,(x,y,width,height)) #bg color rect
+	pygame.draw.line(screen,white,(x,y+(height/2)),(x+width,y+(height/2))) #white line
+	for pos in range(subdivs):
+		pygame.draw.circle(screen,grey,(x+((pos+1)*width/(subdivs)),y+(height/2)),2) #grey circles
+	pygame.draw.circle(screen,green,(x+(width/subdivs),y+(height/2)),5) #green circle
 
 def sliderClick(mouseX,mouseY):
 	for scrObj in screenObject:
-		if mouseX>scrObj and mouseX<10
+		if mouseY>scrObj[1][1] and mouseY<scrObj[1][1]+(height/25):
+			if mouseX>scrObj[1][0] and mouseX<scrObj[1][0]+(width/6):
 
 #END GUI FUNCTIONS
 
@@ -140,8 +146,6 @@ print('Welcome to ERS! Up to six (6) players can participate.')
 while 1: #begin game code
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT: sys.exit()
-
-	pressed = pygame.key.get_pressed()
 
 	screen.fill(black)
 

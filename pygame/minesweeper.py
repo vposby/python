@@ -42,6 +42,7 @@ gameOver=False
 firstGuess=True
 
 def drawHouse(x,y,width,height): #draw menu screen icon
+    pygame.draw.rect(screen,blue,(x,y,width,height))
     pygame.draw.line(screen,white,(x+(width/25),y+(9*height/20)),(x+(width/2),y+(height/25)),2)
     pygame.draw.line(screen,white,(x+(width/2),y+(height/25)),(x+(24*width/25),y+(9*height/20)),2)
     pygame.draw.rect(screen,white,(x+(width/6),y+(17*height/50),2*width/3,7*height/12),2)
@@ -49,21 +50,21 @@ def drawHouse(x,y,width,height): #draw menu screen icon
     return;
 
 def screenChange(scrNum):
+    screen.fill(black)
     if scrNum==1: #menu
         #game title
         screen.blit(titleFont.render("Minesweeper",1,white),(width/6,3*height/20))
         #new game button
-        pygame.draw.rect(screen,green,(width/4,20*height/40,width/2,5*height/40))
+        pygame.draw.rect(screen,green,(width/4,20*height/40,width/2,height/8))
         screen.blit(menuFont.render("New Game",1,white),((width/4)+15,(10*height/20)+18))
         #directions button
-        pygame.draw.rect(screen,blue,(width/4,26*height/40,width/2,5*height/40))
+        pygame.draw.rect(screen,blue,(width/4,26*height/40,width/2,height/8))
         screen.blit(menuFont.render("How to Play",1,white),((width/4)+6,(13*height/20)+18))
         #high scores button
-        pygame.draw.rect(screen,purple,(width/4,32*height/40,width/2,5*height/40))
+        pygame.draw.rect(screen,purple,(width/4,32*height/40,width/2,height/8))
         screen.blit(menuFont.render("High Scores",1,white),((width/4)+6,(16*height/20)+18))
     elif scrNum==2: #size select
         #back to home
-        pygame.draw.rect(screen,blue,(4*width/5,height/20,width/10,width/10))
         drawHouse(4*width/5,height/20,width/10,width/10)
         #screen title
         screen.blit(titleFont.render("Size Selection",1,white),(width/8.5,3*height/20))
@@ -95,15 +96,13 @@ def screenChange(scrNum):
             screen.blit(textFont.render("Cancel",1,black),((17*width/32)+(3*width/200),(59*height/100)+(height/100)))
         elif scrNum==3: #directions
             #back to home
-            pygame.draw.rect(screen,blue,(4*width/5,height/20,width/10,width/10))
             drawHouse(4*width/5,height/20,width/10,width/10)
             screen.blit(titleFont.render("How to Play",1,white),(width/8.5,2*height/20))
         elif scrNum==4: #high scores
             #back to home
-            pygame.draw.rect(screen,blue,(4*width/5,height/20,width/10,width/10))
             drawHouse(4*width/5,height/20,width/10,width/10)
             screen.blit(titleFont.render("High Scores",1,white),(width/8.5,2*height/20))
-    pygame.display.update()
+    pygame.display.flip()
 
 #generate the next field
 def fieldGen(gameMode):
@@ -125,7 +124,7 @@ def fieldGen(gameMode):
             cell.append([x,y,boom,False])
             pygame.draw.rect(screen,grey,((x+1)*(width/gameMode[0]),(y+1)*(height/gameMode[1]),
             width/gameMode[0],width/gameMode[0]))
-            pygame.display.update()
+            pygame.display.flip()
 
 #check if cell has mine
 def cellCheck(cellPos):
@@ -157,7 +156,7 @@ while 1:
                     scrNum=3
                 elif clicked[1]>32*height/40 and clicked[1]<37*height/40: #directions
                     scrNum=4
-                    screenChange(scrNum)
+                screenChange(scrNum)
         elif scrNum==2: #size select
             if clicked[1]>height/20 and clicked[1]<(height/20)+(width/10):
                 if clicked[0]>4*width/5 and clicked[0]<9*width/10:
@@ -204,5 +203,4 @@ while 1:
             if clicked[1]>height/20 and clicked[1]<(height/20)+(width/10):
                 if clicked[0]>4*width/5 and clicked[0]<9*width/10:
                     screenChange(1) #main menu
-
         #add delay between click detections?
