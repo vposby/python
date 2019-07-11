@@ -26,27 +26,21 @@ blue=(0,0,224)
 purple=(128,0,128)
 pink=(224,0,224)
 
-class Button:
-    global screen
+class HouseIcon:
+    global screen, width, height
     def __init__(self,location,size,color):
         self.location = location
         self.size = size
         self.color = color
 
     def drawHouse(self):
-        drawHouse(self.location[0],self.location[1],self.size,self.size)
+        (x,y,z) = (self.location[0],self.location[1],self.size)
+        pygame.draw.rect(screen,blue,(x,y,z,z))
+        pygame.draw.line(screen,white,(x+(z/25),y+(9*z/20)),(x+(z/2),y+(z/25)))
+        pygame.draw.line(screen,white,(x+(z/2),y+(z/25)),(x+(24*z/25),y+(9*z/20)),2)
+        pygame.draw.rect(screen,white,(x+(z/6),y+(17*z/50),2*z/3,7*z/12),2)
+        pygame.draw.rect(screen,white,(x+(3*z/8),y+(87*z/200),z/4,49*z/100),2)
 
-    def click(self):
-        self.color = pink
-
-    #def click(self):
-
-def drawHouse(x,y,width,height): #draw menu screen icon
-    pygame.draw.rect(screen,blue,(x,y,width,height))
-    pygame.draw.line(screen,white,(x+(width/25),y+(9*height/20)),(x+(width/2),y+(height/25)),2)
-    pygame.draw.line(screen,white,(x+(width/2),y+(height/25)),(x+(24*width/25),y+(9*height/20)),2)
-    pygame.draw.rect(screen,white,(x+(width/6),y+(17*height/50),2*width/3,7*height/12),2)
-    pygame.draw.rect(screen,white,(x+(3*width/8),y+(87*height/200),width/4,49*height/100),2)
 
 screen.fill(black)
 clicked=False
@@ -59,8 +53,8 @@ while 1:
     clickPos = pygame.mouse.get_pos()
 
     #clicked=pygame.mouse.get_pos()
-    home=HouseIcon((int(3*width/4),int(width/4)+64),32,purple)
-    home.draw()
+    home=HouseIcon((int(3*width/4),int(width/4)+64),32,blue)
+    home.drawHouse()
     if clicked==True:
         houseIcon.click()
         clicked=False
