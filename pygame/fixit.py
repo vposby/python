@@ -33,7 +33,7 @@ class HouseIcon:
         self.size = size
         self.color = color
 
-    def drawHouse(self):
+    def draw(self):
         (x,y,z) = (self.location[0],self.location[1],self.size)
         pygame.draw.rect(screen,self.color,(x,y,z,z))
         pygame.draw.line(screen,white,(x+(z/25),y+(9*z/20)),(x+(z/2),y+(z/25)))
@@ -43,7 +43,7 @@ class HouseIcon:
 
     def click(self):
         self.color = pink
-        self.drawHouse()
+        self.draw()
 
 screen.fill(black)
 clicked=False
@@ -56,7 +56,7 @@ while 1:
     clickPos = pygame.mouse.get_pos()
 
     home=HouseIcon((width/2,width/2),64,blue)
-    home.drawHouse()
+    home.draw()
     if clicked==True:
         if clickPos[0]>home.location[0] and clickPos[0]<home.location[0]+home.size:
             if clickPos[1]>home.location[1] and clickPos[1]<home.location[1]+home.size:

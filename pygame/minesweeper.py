@@ -40,18 +40,31 @@ boxheight=height/25
 custMenu=False
 gameOver=False
 firstGuess=True
+scrName="home"
 
-def drawHouse(x,y,width,height): #draw menu screen icon
-    pygame.draw.rect(screen,blue,(x,y,width,height))
-    pygame.draw.line(screen,white,(x+(width/25),y+(9*height/20)),(x+(width/2),y+(height/25)),2)
-    pygame.draw.line(screen,white,(x+(width/2),y+(height/25)),(x+(24*width/25),y+(9*height/20)),2)
-    pygame.draw.rect(screen,white,(x+(width/6),y+(17*height/50),2*width/3,7*height/12),2)
-    pygame.draw.rect(screen,white,(x+(3*width/8),y+(87*height/200),width/4,49*height/100),2)
-    return;
+class HouseIcon: #draw menu screen icon
+    global screen, width, height
+    def __init__(self,location,size,color):
+        self.location = location
+        self.size = size
+        self.color = color
 
-def screenChange(scrNum):
+    def draw(self):
+        (x,y,z) = (self.location[0],self.location[1],self.size)
+        pygame.draw.rect(screen,self.color,(x,y,z,z))
+        pygame.draw.line(screen,white,(x+(z/25),y+(9*z/20)),(x+(z/2),y+(z/25)))
+        pygame.draw.line(screen,white,(x+(z/2),y+(z/25)),(x+(24*z/25),y+(9*z/20)),2)
+        pygame.draw.rect(screen,white,(x+(z/6),y+(17*z/50),2*z/3,7*z/12),2)
+        pygame.draw.rect(screen,white,(x+(3*z/8),y+(87*z/200),z/4,49*z/100),2)
+
+    def click(self):
+        screenChange(1)
+
+def screenChange(index):
+    global scrName
     screen.fill(black)
-    if scrNum==1: #menu
+    if index==1: #menu
+        scrName="home"
         #game title
         screen.blit(titleFont.render("Minesweeper",1,white),(width/6,3*height/20))
         #new game button
@@ -63,9 +76,10 @@ def screenChange(scrNum):
         #high scores button
         pygame.draw.rect(screen,purple,(width/4,32*height/40,width/2,height/8))
         screen.blit(menuFont.render("High Scores",1,white),((width/4)+6,(16*height/20)+18))
-    elif scrNum==2: #size select
+    elif index==2: #size select
+        scrName="select"
         #back to home
-        drawHouse(4*width/5,height/20,width/10,width/10)
+        home.draw()
         #screen title
         screen.blit(titleFont.render("Size Selection",1,white),(width/8.5,3*height/20))
         #small
@@ -94,15 +108,17 @@ def screenChange(scrNum):
             screen.blit(textFont.render("Start",1,black),((11*width/32)+(3*width/100),(59*height/100)+(height/100)))
             pygame.draw.rect(screen,black,(17*width/32,59*height/100,width/8,height/25),2)
             screen.blit(textFont.render("Cancel",1,black),((17*width/32)+(3*width/200),(59*height/100)+(height/100)))
-        elif scrNum==3: #directions
-            #back to home
-            drawHouse(4*width/5,height/20,width/10,width/10)
-            screen.blit(titleFont.render("How to Play",1,white),(width/8.5,2*height/20))
-        elif scrNum==4: #high scores
-            #back to home
-            drawHouse(4*width/5,height/20,width/10,width/10)
-            screen.blit(titleFont.render("High Scores",1,white),(width/8.5,2*height/20))
-    pygame.display.flip()
+    elif index==3: #directions
+        scrName="directions"
+        #back to home
+        home.draw()
+        screen.blit(titleFont.render("How to Play",1,white),(width/8.5,2*height/20))
+    elif index==4: #high scores
+        scrName="highscores"
+        #back to home
+        home.draw()
+        screen.blit(titleFont.render("High Scores",1,white),(width/8.5,2*height/20))
+    pygame.display.update()
 
 #generate the next field
 def fieldGen(gameMode):
@@ -140,67 +156,70 @@ def cellCheck(cellPos):
 screen.fill(black)
 scrNum=1
 screenChange(scrNum)
+clicked=False
+home=HouseIcon((4*width/5,height/20),width/10,blue)
 
 while 1:
     for event in pygame.event.get():
         if event.type==pygame.QUIT: sys.exit()
+        if event.type==pygame.MOUSEBUTTONDOWN and event.button==1: clicked=True
+    clickPos=pygame.mouse.get_pos()
 
-    clicked=pygame.mouse.get_pos()
-
-    if event.type==pygame.MOUSEBUTTONDOWN and event.button==1:
-        if scrNum==1: #main menu
-            if clicked[0]>width/4 and clicked[0]<3*width/4:
-                if clicked[1]>20*height/40 and clicked[1]<25*height/40: #size select
+    if clicked==True:
+        if scrName=="home": #main menu
+            if clickPos[0]>width/4 and clickPos[0]<3*width/4:
+                if clickPos[1]>20*height/40 and clickPos[1]<25*height/40: #size select
                     scrNum=2
-                elif clicked[1]>26*height/40 and clicked[1]<31*height/40: #high scores
+                elif clickPos[1]>26*height/40 and clickPos[1]<31*height/40: #high scores
                     scrNum=3
-                elif clicked[1]>32*height/40 and clicked[1]<37*height/40: #directions
+                elif clickPos[1]>32*height/40 and clickPos[1]<37*height/40: #directions
                     scrNum=4
                 screenChange(scrNum)
-        elif scrNum==2: #size select
-            if clicked[1]>height/20 and clicked[1]<(height/20)+(width/10):
-                if clicked[0]>4*width/5 and clicked[0]<9*width/10:
-                    screenChange(1) #main menu
-            elif clicked[1]>6*height/20 and clicked[1]<(6*height/20)+(5*width/12):
+        elif scrName=="select": #size select
+            if clickPos[1]>home.location[1] and clickPos[1]<home.location[1]+home.size:
+                if clickPos[0]>home.location[0] and clickPos[0]<home.location[0]+home.size:
+                    home.click() #main menu
+            elif clickPos[1]>6*height/20 and clickPos[1]<(6*height/20)+(5*width/12):
                 cell=[]
-                if clicked[0]>width/15 and clicked[0]<(width/15)+(5*width/12):
+                if clickPos[0]>width/15 and clickPos[0]<(width/15)+(5*width/12):
                     gameSize=10 #small
-                elif clicked[0]>8*width/15 and clicked[0]<(8*width/15)+(5*width/12):
+                elif clickPos[0]>8*width/15 and clickPos[0]<(8*width/15)+(5*width/12):
                     gameSize=15 #medium
-                elif clicked[1]>13*height/20 and clicked[1]<(13*height/20)+(5*width/12):
-                    if clicked[0]>width/15 and clicked[0]<(width/15)+(5*width/12):
+                elif clickPos[1]>13*height/20 and clickPos[1]<(13*height/20)+(5*width/12):
+                    if clickPos[0]>width/15 and clickPos[0]<(width/15)+(5*width/12):
                         gameSize=20 #large
                 fieldGen([gameSize,gameSize])
                 """
                 while gameOver==False:
                     if event.type==pygame.MOUSEBUTTONDOWN and event.button==1:
-                        cellCheck([clicked[0],clicked[1]])
+                        cellCheck([clickPos[0],clickPos[1]])
                 """
-            elif clicked[0]>8*width/15 and clicked[0]<(8*width/15)+(5*width/12):
-                if clicked[0]>boxx and clicked[0]<boxx+boxwidth:
-                    if (clicked[1]>45*height/100 and clicked[1]<(45*height/100)+boxheight) or (clicked[1]>53*height/100 and clicked[1]<(53*height/100)+boxheight):
+            elif clickPos[0]>8*width/15 and clickPos[0]<(8*width/15)+(5*width/12):
+                if clickPos[0]>boxx and clickPos[0]<boxx+boxwidth:
+                    if (clickPos[1]>45*height/100 and clickPos[1]<(45*height/100)+boxheight) or (clickPos[1]>53*height/100 and clickPos[1]<(53*height/100)+boxheight):
                         if event.type==pygame.MOUSEBUTTONUP and event.button==5 and custWd<25: #upscroll
                             custWd+=1
                         elif event.type==pygame.MOUSEBUTTONUP and event.button==4 and custWd>10: #downscroll
                             custWd-=1
-                if clicked[1]>59*height/100 and clicked[1]<63*height/100:
+                if clickPos[1]>59*height/100 and clickPos[1]<63*height/100:
                     if event.type==pygame.MOUSEBUTTONDOWN and event.button==1:
-                        if clicked[0]>11*width/32 and clicked[0]<15*width/32: #start
+                        if clickPos[0]>11*width/32 and clickPos[0]<15*width/32: #start
                             cell=[]
                             fieldGen([custWd,custHt])
                             """
                             while gameOver==False:
                                 if event.type==pygame.MOUSEBUTTONDOWN and event.button==1:
-                                    cellCheck([clicked[0],clicked[1]])
+                                    cellCheck([clickPos[0],clickPos[1]])
                             """
-                        elif clicked[0]>17*width/32 and clicked[0]<21*width/32: #cancel
+                        elif clickPos[0]>17*width/32 and clickPos[0]<21*width/32: #cancel
                             screenChange(2)
-        elif scrNum==3: #directions
-            if clicked[1]>height/20 and clicked[1]<(height/20)+(width/10):
-                if clicked[0]>4*width/5 and clicked[0]<9*width/10:
-                    screenChange(1) #main menu
-        elif scrNum==4: #high scores
-            if clicked[1]>height/20 and clicked[1]<(height/20)+(width/10):
-                if clicked[0]>4*width/5 and clicked[0]<9*width/10:
-                    screenChange(1) #main menu
+        elif scrName=="directions": #directions
+            if clickPos[1]>home.location[1] and clickPos[1]<home.location[1]+home.size:
+                if clickPos[0]>home.location[0] and clickPos[0]<home.location[0]+home.size:
+                    home.click() #main menu
+        elif scrName=="highscores": #high scores
+            if clickPos[1]>home.location[1] and clickPos[1]<home.location[1]+home.size:
+                if clickPos[0]>home.location[0] and clickPos[0]<home.location[0]+home.size:
+                    home.click() #main menu
+        clicked=False
         #add delay between click detections?
