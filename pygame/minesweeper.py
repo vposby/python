@@ -21,9 +21,6 @@ pink = (224,0,224)
 
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Minesweeper")
-largeFont = pygame.font.Font(None,60)
-mediumFont = pygame.font.Font(None,46)
-smallFont = pygame.font.Font(None,30)
 custWd = 10
 custHt = 10
 boxx = 27*width/100

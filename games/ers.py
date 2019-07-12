@@ -21,25 +21,44 @@ pink = (224, 0, 224)
 
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Egyptian War')
-lrgFont = pygame.font.Font(None, 60)
-medFont = pygame.font.Font(None, 45)
-smlFont = pygame.font.Font(None, 30)
-tnyFont = pygame.font.Font(None, 15)
-screenObject = [] #track rendered objects onscreen
+largeFont = pygame.font.Font(None, 60)
+mediumFont = pygame.font.Font(None, 45)
+smallFont = pygame.font.Font(None, 30)
+tinyFont = pygame.font.Font(None, 15)
 
-#BEGIN GUI FUNCTIONS
+#BEGIN GUI FUNCTIONS, CLASSES
+class Slider:
+	global screen, width, height
+
+	def __init__(self,location,id,min,max):
+		self.location = location #as (x,y)
+		self.id = id #as string
+		self.min = min #as integer
+		self.max = max #as integer
+
+	def draw(self):
+		(x,y) = (int(self.location[0]),int(self.location[1]))
+		label = mediumFont.render(self.id,1,white)
+		screen.blit(label,(x,y))
+		leftEnd = int(x+label.get_width())
+		rightEnd = int(leftEnd+(width/6))
+		sldrHt = int(y+(label.get_height()/2))
+		pygame.draw.line(screen,white,(leftEnd,sldrHt),(rightEnd,sldrHt),3)
+		center = int((leftEnd+rightEnd)/2)
+		for x in range(self.max-self.min):
+			pygame.draw.circle(screen,grey,(center,sldrHt),3)
+
+	def click(self):
+		pygame.display.update()
+
 def screenChange(screenName):
 	screen.fill(black)
 	if screenName == 'Lobby': #game setting selection
 		#render order (comment placeholders)
-		gameTitle=lrgFont.render('Egyptian War',1,white) #game title
-		titleLocation = gameTitle.get_rect(center=(width/2,height/10))
-		trackRender(gameTitle,(titleLocation))
-		compHeader=medFont.render('Player Options:',1,white)
-		trackRender(compHeader,(width/10,3*height/25))
-		compCountLabel=medFont.render('Number of Competitors',1,white) #competitor count label
-		trackRender(compCountLabel,(width/10,4*height/25))
-		renderSlider(width/4,4*height/25,width/6,height/25,5) #competitor count slider, default 1
+		#game title
+		#player options label
+		#competitor count label
+		#competitor count slider, default 1
 		#competitor count slider (three components; bg color rect, white line, grey circle)
 		#competitor count slider value
 		#for x in range(competitor count):
@@ -51,6 +70,8 @@ def screenChange(screenName):
 		#rules checkboxes
 		#new game button
 		#continue game button
+		placeholder = Slider((width/2,height/2),"Placeholder",1,5)
+		placeholder.draw()
 
 	elif screenName=='Game': #actual game
 		#render order (comment placeholders)
@@ -61,23 +82,10 @@ def screenChange(screenName):
 			#player name
 			#number of cards
 		#last played card (displayed larger than player hands, centered)
-		screen.blit(font.render(historyOutput,1,white),(width/6,3*height/20)) #list of events
-
-def trackRender(objectName,objectPos):
-	screenObject.append([objectName,objectPos])
-	screen.blit(screenObject[len(screenObject)-1][0],screenObject[len(screenObject)-1][1])
-
-def renderSlider(x,y,width,height,subdivs):
-	pygame.draw.rect(screen,black,(x,y,width,height)) #bg color rect
-	pygame.draw.line(screen,white,(x,y+(height/2)),(x+width,y+(height/2))) #white line
-	for pos in range(subdivs):
-		pygame.draw.circle(screen,grey,(x+((pos+1)*width/(subdivs)),y+(height/2)),2) #grey circles
-	pygame.draw.circle(screen,green,(x+(width/subdivs),y+(height/2)),5) #green circle
-
-def sliderClick(mouseX,mouseY):
-	for scrObj in screenObject:
-		if mouseY>scrObj[1][1] and mouseY<scrObj[1][1]+(height/25):
-			if mouseX>scrObj[1][0] and mouseX<scrObj[1][0]+(width/6):
+		#list of events
+		placeholder = Slider((width/2,height/2),"Placeholder",1,5)
+		placeholder.draw()
+	pygame.display.update()
 
 #END GUI FUNCTIONS
 
@@ -141,11 +149,16 @@ for x in range(random.randrange(5, 11)): #shuffle cards
 
 screen.fill(black)
 screenChange('Lobby')
+clicked = False
 print('Welcome to ERS! Up to six (6) players can participate.')
 
 while 1: #begin game code
 	for event in pygame.event.get():
-		if event.type == pygame.QUIT: sys.exit()
+		if event.type == pygame.QUIT:
+			sys.exit()
+		elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+			clicked = True
+			(mouseX,mouseY) = pygame.mouse.get_pos()
 
 	screen.fill(black)
 
