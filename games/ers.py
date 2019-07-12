@@ -1,17 +1,104 @@
 """
 Egyptian War!
-version 1.0 - no slaps, straight card play
+v 2.0 - straight card play, single player, pygame gui
 """
 
-import sys, random, pprint
+import sys, random, pprint, pygame
+pygame.init()
 
-def rearrange(listInput,index):
+size = width, height = (512, 338)
+black = (0, 0, 0)
+white = (255, 255, 255)
+grey = (196, 196, 196)
+red = (224, 0, 0)
+orange = (255, 128, 0)
+yellow = (224, 224, 0)
+green = (0, 224, 0)
+cyan = (0, 255, 255)
+blue = (0, 0, 224)
+purple = (128, 0, 128)
+pink = (224, 0, 224)
+
+screen = pygame.display.set_mode(size)
+pygame.display.set_caption('Egyptian War')
+largeFont = pygame.font.Font(None, 60)
+mediumFont = pygame.font.Font(None, 45)
+smallFont = pygame.font.Font(None, 30)
+tinyFont = pygame.font.Font(None, 15)
+
+#BEGIN GUI FUNCTIONS, CLASSES
+class Slider:
+	global screen, width, height
+
+	def __init__(self,location,id,min,max):
+		self.location = location #as (x,y)
+		self.id = id #as string
+		self.min = min #as integer
+		self.max = max #as integer
+
+	def draw(self):
+		(x,y) = (int(self.location[0]),int(self.location[1]))
+		label = smallFont.render(self.id,1,white)
+		screen.blit(label,(x,y))
+		leftEnd = int(x+label.get_width())
+		rightEnd = int(leftEnd+(width/6))
+		sldrHt = int(y+(label.get_height()/2))
+		pygame.draw.line(screen,white,(leftEnd,sldrHt),(rightEnd,sldrHt),3)
+		center = int((leftEnd+rightEnd)/2)
+		for x in range(self.max-self.min):
+			pygame.draw.circle(screen,grey,(center,sldrHt),3)
+
+	def click(self):
+		pygame.display.update()
+
+def screenChange(screenName):
+	screen.fill(black)
+	if screenName == 'Lobby': #game setting selection
+		#render order (comment placeholders)
+		#game title
+		#player options label
+		#competitor count label
+		#competitor count slider, default 1
+		#competitor count slider (three components; bg color rect, white line, grey circle)
+		#competitor count slider value
+		#for x in range(competitor count):
+			#competitor difficulty labels
+			#competitor difficulty sliders (three components; bg color rect, white line, grey circle)
+			#competitor difficulty slider values
+		#rules label
+		#slaps checkbox
+		#rules checkboxes
+		#new game button
+		#continue game button
+		placeholder = largeFont.render("Under Construction",1,orange)
+		position = placeholder.get_rect(center=(width/2,height/2))
+		screen.blit(placeholder,position)
+
+	elif screenName=='Game': #actual game
+		#render order (comment placeholders)
+		#play/pause button
+		#playerOrbit (invisible ellipse to guide player "hands")
+		#for person in player:
+			#cardBack.jpg
+			#player name
+			#number of cards
+		#last played card (displayed larger than player hands, centered)
+		#list of events
+		placeholder = largeFont.render("Under Construction",1,orange)
+		position = placeholder.get_rect(center=(width/2,height/2))
+		screen.blit(placeholder,position)
+	pygame.display.update()
+
+#END GUI FUNCTIONS
+
+#BEGIN GAMEPLAY FUNCTIONS
+def rearrange(listInput, index):
 	listInput.append(listInput[index])
 	listInput.pop(index)
 
 def printInvalid(message):
 	global invalid
-	invalid+=1
+	invalid += 1
 	if invalid < 4:
 		print('Invalid entry! You have ' + str(4-invalid) + ' attempt(s) before the program closes.')
 		print(message)
@@ -19,7 +106,7 @@ def printInvalid(message):
 def checkInvalid():
 	global invalid
 	if invalid == 4:
-		print("You have made too many invalid entries. The program will now close.")
+		print('You have made too many invalid entries. The program will now close.')
 		sys.exit()
 
 def playCard(playerIndex, handIndex):
@@ -41,7 +128,7 @@ def playCard(playerIndex, handIndex):
 
 def chooseNext():
 	global person
-	if person+1>=len(player):
+	if person + 1 >= len(player):
 		person = 0
 	else:
 		person+=1
@@ -49,21 +136,33 @@ def chooseNext():
 def removePlayer(playerIndex):
 	print('\nSorry, ' + player[playerIndex][0] + ', you\'re out of cards! Goodbye!')
 	player.pop(playerIndex)
+#END GAMEPLAY FUNCTIONS
 
 values = ['Ace','2','3','4','5','6','7','8','9','10','Jack','Queen','King']
 suits = ['Hearts','Diamonds','Clubs','Spades']
 deck = []
 for suit in suits: #create deck
 	for value in values:
-		deck.append([value,suit])
+		deck.append([value, suit])
 
-for x in range(random.randrange(5,11)): #shuffle cards
+for x in range(random.randrange(5, 11)): #shuffle cards
 	for y in range(len(deck)):
-		rearrange(deck,random.randrange(0,len(deck)))
+		rearrange(deck,random.randrange(0, len(deck)))
 
-print('Welcome to ERS! Up to six (6) players can participate.')
+screen.fill(black)
+screenChange('Lobby')
+clicked = False
 
 while 1: #begin game code
+	for event in pygame.event.get():
+		if event.type == pygame.QUIT:
+			sys.exit()
+		elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+			clicked = True
+			(mouseX,mouseY) = pygame.mouse.get_pos()
+
+	#PRESERVE CODE BELOW
+	"""
 	human = 0
 	computer = 0
 	players = human + computer
@@ -190,3 +289,4 @@ while 1: #begin game code
 									print(p[0] + ' has ' + str(p[1]) + ' cards.')
 								handOver = True
 						played+=1
+	"""
