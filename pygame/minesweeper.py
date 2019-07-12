@@ -1,11 +1,5 @@
 """
-Desktop/Software/Python/Pygame
 Minesweeper!
-Current Issues:
-*custMenu doesn't drop when Cancel button is pressed
-*clicking new game needs a delay between clicks
- (goes straight to small or medium game depending on
-  mouse position)
 """
 
 import sys, pygame, random
@@ -50,7 +44,7 @@ class HouseIcon: #draw menu screen icon
     def draw(self):
         (x,y,z) = (self.location[0],self.location[1],self.size)
         pygame.draw.rect(screen,self.color,(x,y,z,z))
-        pygame.draw.line(screen,white,(x+(z/25),y+(9*z/20)),(x+(z/2),y+(z/25)))
+        pygame.draw.line(screen,white,(x+(z/25),y+(9*z/20)),(x+(z/2),y+(z/25)),2)
         pygame.draw.line(screen,white,(x+(z/2),y+(z/25)),(x+(24*z/25),y+(9*z/20)),2)
         pygame.draw.rect(screen,white,(x+(z/6),y+(17*z/50),2*z/3,7*z/12),2)
         pygame.draw.rect(screen,white,(x+(3*z/8),y+(87*z/200),z/4,49*z/100),2)
