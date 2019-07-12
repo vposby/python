@@ -38,7 +38,7 @@ class Slider:
 
 	def draw(self):
 		(x,y) = (int(self.location[0]),int(self.location[1]))
-		label = mediumFont.render(self.id,1,white)
+		label = smallFont.render(self.id,1,white)
 		screen.blit(label,(x,y))
 		leftEnd = int(x+label.get_width())
 		rightEnd = int(leftEnd+(width/6))
@@ -70,8 +70,9 @@ def screenChange(screenName):
 		#rules checkboxes
 		#new game button
 		#continue game button
-		placeholder = Slider((width/2,height/2),"Placeholder",1,5)
-		placeholder.draw()
+		placeholder = largeFont.render("Under Construction",1,orange)
+		position = placeholder.get_rect(center=(width/2,height/2))
+		screen.blit(placeholder,position)
 
 	elif screenName=='Game': #actual game
 		#render order (comment placeholders)
@@ -83,8 +84,9 @@ def screenChange(screenName):
 			#number of cards
 		#last played card (displayed larger than player hands, centered)
 		#list of events
-		placeholder = Slider((width/2,height/2),"Placeholder",1,5)
-		placeholder.draw()
+		placeholder = largeFont.render("Under Construction",1,orange)
+		position = placeholder.get_rect(center=(width/2,height/2))
+		screen.blit(placeholder,position)
 	pygame.display.update()
 
 #END GUI FUNCTIONS
@@ -150,7 +152,6 @@ for x in range(random.randrange(5, 11)): #shuffle cards
 screen.fill(black)
 screenChange('Lobby')
 clicked = False
-print('Welcome to ERS! Up to six (6) players can participate.')
 
 while 1: #begin game code
 	for event in pygame.event.get():
@@ -160,8 +161,8 @@ while 1: #begin game code
 			clicked = True
 			(mouseX,mouseY) = pygame.mouse.get_pos()
 
-	screen.fill(black)
-
+	#PRESERVE CODE BELOW
+	"""
 	human = 0
 	computer = 0
 	players = human + computer
@@ -288,3 +289,4 @@ while 1: #begin game code
 									print(p[0] + ' has ' + str(p[1]) + ' cards.')
 								handOver = True
 						played+=1
+	"""
