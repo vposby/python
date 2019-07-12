@@ -35,12 +35,15 @@ class HouseIcon:
 
     def drawHouse(self):
         (x,y,z) = (self.location[0],self.location[1],self.size)
-        pygame.draw.rect(screen,blue,(x,y,z,z))
+        pygame.draw.rect(screen,self.color,(x,y,z,z))
         pygame.draw.line(screen,white,(x+(z/25),y+(9*z/20)),(x+(z/2),y+(z/25)))
         pygame.draw.line(screen,white,(x+(z/2),y+(z/25)),(x+(24*z/25),y+(9*z/20)),2)
         pygame.draw.rect(screen,white,(x+(z/6),y+(17*z/50),2*z/3,7*z/12),2)
         pygame.draw.rect(screen,white,(x+(3*z/8),y+(87*z/200),z/4,49*z/100),2)
 
+    def click(self):
+        self.color = pink
+        self.drawHouse()
 
 screen.fill(black)
 clicked=False
@@ -52,11 +55,13 @@ while 1:
 
     clickPos = pygame.mouse.get_pos()
 
-    #clicked=pygame.mouse.get_pos()
-    home=HouseIcon((int(3*width/4),int(width/4)+64),32,blue)
+    home=HouseIcon((width/2,width/2),64,blue)
     home.drawHouse()
     if clicked==True:
-        houseIcon.click()
-        clicked=False
-    updateRect = pygame.Rect(width/4,height/4,192,192)
+        if clickPos[0]>home.location[0] and clickPos[0]<home.location[0]+home.size:
+            if clickPos[1]>home.location[1] and clickPos[1]<home.location[1]+home.size:
+                home.click()
+                clicked=False
+
+    updateRect = pygame.Rect(home.location[0],home.location[1],home.size,home.size)
     pygame.display.update(updateRect)
