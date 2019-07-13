@@ -22,45 +22,69 @@ pink = (224, 0, 224)
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Egyptian War')
 largeFont = pygame.font.Font(None, 60)
-mediumFont = pygame.font.Font(None, 45)
-smallFont = pygame.font.Font(None, 30)
-tinyFont = pygame.font.Font(None, 15)
+mediumFont = pygame.font.Font(None, 40)
+smallFont = pygame.font.Font(None, 20)
 
 #BEGIN GUI FUNCTIONS, CLASSES
 class Slider:
-	global screen, width, height
-
-	def __init__(self,location,id,min,max):
-		self.location = location #as (x,y)
-		self.id = id #as string
+	global screen, width, height, clicked, mouseX, mouseY
+	def __init__(self,pos,id,min,max,val):
+		self.id = smallFont.render(id + ": " + str(val),1,white)
+		(x,y) = (int(pos[0]),int(pos[1]))
+		leftEnd = int(x+self.id.get_width()+(width/50))
+		rightEnd = int(leftEnd+(width/6))
+		sldrHt = int(y+(self.id.get_height()/2))
+		self.pos = [pos,(leftEnd,sldrHt),(rightEnd,sldrHt),[]]
 		self.min = min #as integer
 		self.max = max #as integer
+		self.val = val #as integer
+		for x in range(max-min+1):
+			widthMod = int(x*(rightEnd-leftEnd)/(max-1))
+			if x != val+1:
+				self.pos[3].append([grey,(leftEnd+widthMod,sldrHt),3])
+			else:
+				self.pos[3].append([green,(leftEnd+widthMod,sldrHt),4])
 
 	def draw(self):
-		(x,y) = (int(self.location[0]),int(self.location[1]))
-		label = smallFont.render(self.id,1,white)
-		screen.blit(label,(x,y))
-		leftEnd = int(x+label.get_width())
-		rightEnd = int(leftEnd+(width/6))
-		sldrHt = int(y+(label.get_height()/2))
-		pygame.draw.line(screen,white,(leftEnd,sldrHt),(rightEnd,sldrHt),3)
-		center = int((leftEnd+rightEnd)/2)
-		for x in range(self.max-self.min):
-			pygame.draw.circle(screen,grey,(center,sldrHt),3)
+		screen.blit(self.id,self.pos[0])
+		pygame.draw.line(screen,white,self.pos[1],self.pos[2],3)
+		for x in range(len(self.pos[3])-1):
+			pygame.draw.circle(screen,self.pos[3][x][0],self.pos[3][x][1],self.pos[3][x][2])
 
 	def click(self):
-		pygame.display.update()
+		self.draw()
+		#pygame.display.update()
+
+class Label:
+	global screen, width, height
+	def __init__(self,x,y,color,caption,font,center=False):
+		self.x = x #as integer
+		self.y = y #as integer
+		self.color = color #as (r,g,b)
+		self.caption = caption #as string
+		self.font = font #as font
+		self.center = center #as boolean
+
+	def draw(self):
+		text = self.font.render(self.caption,1,self.color)
+		if self.center==False:
+			pos = (self.x,self.y)
+		else:
+			pos = text.get_rect(center=(self.x,self.y))
+		screen.blit(text,pos)
 
 def screenChange(screenName):
 	screen.fill(black)
 	if screenName == 'Lobby': #game setting selection
 		#render order (comment placeholders)
-		#game title
-		#player options label
-		#competitor count label
-		#competitor count slider, default 1
-		#competitor count slider (three components; bg color rect, white line, grey circle)
-		#competitor count slider value
+		lblTitle = Label(width/2,height/12,white,"Egyptian War",largeFont,True)
+		lblTitle.draw() #game title
+		pygame.draw.line(screen,white,(width/18,height/6),(17*width/18,height/6),2)
+		pygame.draw.line(screen,white,(width/2,height/6),(width/2,19*height/20),2)
+		lblPlayer = Label(width/4,23*height/100,white,"Player Options",mediumFont,True)
+		lblPlayer.draw() #player options label
+		sldrCompCount = Slider((width/18,29*height/100),"Competitors",1,5,1)
+		sldrCompCount.draw() #competitor count slider
 		#for x in range(competitor count):
 			#competitor difficulty labels
 			#competitor difficulty sliders (three components; bg color rect, white line, grey circle)
@@ -70,9 +94,10 @@ def screenChange(screenName):
 		#rules checkboxes
 		#new game button
 		#continue game button
-		placeholder = largeFont.render("Under Construction",1,orange)
-		position = placeholder.get_rect(center=(width/2,height/2))
-		screen.blit(placeholder,position)
+		#placeholder = largeFont.render("Under Construction",1,orange)
+		#position = placeholder.get_rect(center=(width/2,height/2))
+		#screen.blit(placeholder,position)
+
 
 	elif screenName=='Game': #actual game
 		#render order (comment placeholders)
