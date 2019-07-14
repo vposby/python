@@ -30,11 +30,12 @@ smallFont = pygame.font.Font(None, 20)
 class Slider:
 	global screen, width, height, clicked, mouseX, mouseY
 	def __init__(self,pos,id,min,max,val):
-		self.id = smallFont.render(id + ": " + str(val),1,white)
+		self.id = id + ": " + str(val)
+		caption = smallFont.render(self.id,1,white)
 		(x,y) = (int(pos[0]),int(pos[1]))
-		leftEnd = int(x+self.id.get_width()+(width/50))
+		leftEnd = int(x+caption.get_width()+(width/50))
 		rightEnd = int(leftEnd+(width/6))
-		sldrHt = int(y+(self.id.get_height()/2))
+		sldrHt = int(y+(caption.get_height()/2))
 		self.pos = [pos,leftEnd,rightEnd,sldrHt,[]]
 		self.min = min #as integer
 		self.max = max #as integer
@@ -47,44 +48,34 @@ class Slider:
 				self.pos[4].append([green,(leftEnd+widthMod,sldrHt),4])
 
 	def draw(self):
+		caption = smallFont.render(self.id,1,white)
 		(x,y) = (self.pos[0][0]-(width/100),self.pos[0][1])
-		(w,h) = (self.pos[0][0]-self.pos[1]+(width/100),self.id.get_height())
+		(w,h) = (self.pos[2]-self.pos[0][0]+(width/100),caption.get_height())
 		pygame.draw.rect(screen,black,(x,y,w,h))
-		screen.blit(self.id,self.pos[0])
+		screen.blit(caption,self.pos[0])
 		pygame.draw.line(screen,white,(self.pos[1],self.pos[3]),(self.pos[2],self.pos[3]),3)
 		for x in range(len(self.pos[4])):
 			pygame.draw.circle(screen,self.pos[4][x][0],self.pos[4][x][1],self.pos[4][x][2])
-		#start transparent rect code
-		w1 = self.pos[4][1][1][0]-self.pos[1]
-		w2 = w1/2
-		for i in range(len(self.pos[4])):
-			if i == 0:
-				(x,y) = (int(self.pos[1]),int(self.pos[0][1]))
-				(w,h) = (w2,int(self.id.get_height()))
-			elif i+1 == len(self.pos[4]):
-				(x,y) = (int(self.pos[4][i][1][0]-w2),int(self.pos[0][1]))
-				(w,h) = (w2,int(self.id.get_height()))
-			else:
-				(x,y) = (int(self.pos[4][i][1][0])-w2,int(self.pos[0][1]))
-				(w,h) = (w1,int(self.id.get_height()))
-			temp = pygame.Surface((w,h),pygame.SRCALPHA)
-			temp.fill((0,32*(i+1),32*(i+1),192))
-			screen.blit(temp,(x,y))
-		#end transparent rect code
-		pygame.display.update((x,y,w,h))
+		pygame.display.update() #(x,y,w,h)
 
 	def click(self):
-		area = int(self.pos[4][1][1][0]-self.pos[1])
-		area2 = area/2
+		area = int(self.pos[4][1][1][0]-self.pos[1])/2
 		for x in range(len(self.pos[4])):
 			if x == 0:
-				if mouseX>self.pos[1] and mouseX<self.pos[1]+area2:
+				if mouseX>self.pos[1] and mouseX<self.pos[1]+area:
 					self.val = self.min
 			elif x+1 == len(self.pos[4]):
-				if mouseX>self.pos[2]-area2 and mouseX<self.pos[2]:
+				if mouseX>self.pos[2]-area and mouseX<self.pos[2]:
 					self.val = self.max
 			elif mouseX>self.pos[4][x][1][0]-area and mouseX<self.pos[4][x][1][0]+area:
 					self.val = x + 1
+
+			self.id = self.id.replace(self.id[len(self.id)-1],str(self.val))
+
+			if x+1 != self.val:
+				(self.pos[4][x][0],self.pos[4][x][2])=(grey,3)
+			else:
+				(self.pos[4][x][0],self.pos[4][x][2])=(green,4)
 		self.draw()
 
 
@@ -222,12 +213,12 @@ while 1: #begin game code
 
 	(mouseX,mouseY) = pygame.mouse.get_pos()
 
-	if clicked == True:
-		if scrName == 'Lobby':
-			if mouseY>sldrCompCount.pos[0][1] \
-			and mouseY>sldrCompCount.pos[0][1]+sldrCompCount.id.get_height() \
-			and mouseX>sldrCompCount.pos[0][0] \
-			and mouseX<sldrCompCount.pos[2]: sldrCompCount.click() #no else
+	if scrName == 'Lobby':
+		if mouseY>sldrCompCount.pos[0][1] \
+		and mouseY>sldrCompCount.pos[0][1]+sldrCompCount.pos[3] \
+		and mouseX>sldrCompCount.pos[0][0] \
+		and mouseX<sldrCompCount.pos[2] \
+		and clicked == True: sldrCompCount.click() #no else
 
 	#PRESERVE CODE BELOW
 	"""
