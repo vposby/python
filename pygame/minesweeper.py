@@ -112,7 +112,7 @@ class Menu:
         #add choice buttons
 
 def screenTitle(caption):
-    scrTitle = largeFont.render(caption,1,white)
+    scrTitle = pygame.font.Font(None,60).render(caption,1,white)
     titleRect = scrTitle.get_rect(center=(width/2,3*height/20))
     screen.blit(scrTitle,titleRect)
 
@@ -138,6 +138,7 @@ def screenChange(index):
             menuOpt = ["Grid Width","Grid Height"]
             menuCUS = Menu((width/4,height/3),(width/2,height/3),grey,menuText,menuOpt)
             pygame.draw.rect(screen,grey,(width/4,height/3,width/2,height/3))
+            """
             screen.blit(tinyFont.render("Choose your grid size below by",1,black),(boxx,(height/3)+(height/100)))
             screen.blit(tinyFont.render("scrolling the mouse wheel.",1,black),(boxx,(height/3)+(3*height/100)))
             screen.blit(tinyFont.render("Grid Width:",1,black),(boxx,21*height/50))
@@ -150,6 +151,7 @@ def screenChange(index):
             screen.blit(tinyFont.render("Start",1,black),((11*width/32)+(3*width/100),(59*height/100)+(height/100)))
             pygame.draw.rect(screen,black,(17*width/32,59*height/100,width/8,height/25),2)
             screen.blit(tinyFont.render("Cancel",1,black),((17*width/32)+(3*width/200),(59*height/100)+(height/100)))
+            """
     elif index == 3:
         scrName = "directions" #directions
         home.draw() #back to home
@@ -185,11 +187,10 @@ def fieldGen(gameMode):
 def cellCheck(cellPos):
     if firstGuess == False:
         #reveal number of mines surrounding square, clear any swathes of vacant space
-        screen.blit(largeFont.render("Game Screen",1,white),(width/2,height/2))
+        pygame.display.update()
     else:
         #if mine exists at location, remove and place at topmost/leftmost square
-        screen.fill(black)
-        screen.blit(largeFont.render("Game Screen",1,white),(width/2,height/2))
+        pygame.display.update()
 
 #show beginning screen
 screen.fill(black)
@@ -260,4 +261,3 @@ while 1:
                 if mouseX>home.location[0] and mouseX<home.location[0]+home.size:
                     home.click() #main menu
         clicked = False
-        #add delay between click detections?
