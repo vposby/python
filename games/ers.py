@@ -30,29 +30,29 @@ smallFont = pygame.font.Font(None, 20)
 class Slider:
 	global screen, width, height, mouseX, mouseY
 	def __init__(self,pos,id,min,max,val):
-		self.id = id + ": " + str(val)
+		self.val = val #as integer
+		self.id = id + ": " + str(self.val) #slider caption
 		caption = smallFont.render(self.id,1,white)
 		(x,y) = (int(pos[0]),int(pos[1]))
 		leftEnd = int(x+caption.get_width()+(width/50))
 		rightEnd = int(leftEnd+(width/6))
 		sldrHt = int(y+(caption.get_height()/2))
-		self.pos = [pos,leftEnd,rightEnd,sldrHt,[]]
+		self.pos = [pos,leftEnd,rightEnd,sldrHt,[]] #positional values
 		self.min = min #as integer
 		self.max = max #as integer
-		self.val = val #as integer
 		for x in range(max-min+1):
 			widthMod = int(x*(rightEnd-leftEnd)/(max-1))
-			if x+1 != val:
+			if x+1 != val: #values (min to max)
 				self.pos[4].append([grey,(leftEnd+widthMod,sldrHt),3])
 			else:
 				self.pos[4].append([green,(leftEnd+widthMod,sldrHt),4])
 
 	def draw(self):
 		caption = smallFont.render(self.id,1,white) #use this to determine slider height
-		(x,y) = (self.pos[0][0]-(width/50),self.pos[0][1])
-		(w,h) = (self.pos[2]-self.pos[0][0]+(width/50),caption.get_height())
+		(x,y) = (self.pos[0][0]-int(width/33),self.pos[0][1])
+		(w,h) = (self.pos[2]-self.pos[0][0]+int(width/33),caption.get_height())
 		pygame.draw.rect(screen,black,(x,y,w,h)) #set blank rect for slider
-		screen.blit(caption,self.pos[0]) #draw caption
+		screen.blit(caption,self.pos[0]) #caption
 		#slider line, values (min to max) below
 		pygame.draw.line(screen,white,(self.pos[1],self.pos[3]),(self.pos[2],self.pos[3]),3)
 		for x in range(len(self.pos[4])):
@@ -70,8 +70,8 @@ class Slider:
 				if mouseX>self.pos[2]-area and mouseX<self.pos[2]:
 					self.val = self.max
 			elif mouseX>self.pos[4][x][1][0]-area and mouseX<self.pos[4][x][1][0]+area:
-					self.val = x + 1
-			if x+1 == self.val: (self.pos[4][x][0],self.pos[4][x][2])=(green,4) #value circle: green
+					self.val = x+1
+		(self.pos[4][self.val-1][0],self.pos[4][self.val-1][2])=(green,4) #value circle: green
 		self.id = self.id.replace(self.id[len(self.id)-1],str(self.val)) #set new slider caption
 		self.draw()
 
@@ -107,7 +107,10 @@ def screenChange(screenName):
 		pygame.draw.line(screen,white,(width/2,height/6),(width/2,19*height/20),2)
 		lblPlayer.draw() #player options label
 		sldrCompCount.draw() #competitor count slider
-		#for x in range(competitor count):
+		compList=[]
+		for i in range(sldrCompCount.val): #competitor difficulty sliders
+			heightMod=sldrCompCount.pos[3]+(i*sldrCompCount.pos[3])
+			Slider((width/24,(29+heightMod)*height/100),"Computer "+str(i+1)+" Difficulty",1,3,1)
 			#competitor difficulty labels
 			#competitor difficulty sliders (three components; bg color rect, white line, grey circle)
 			#competitor difficulty slider values
