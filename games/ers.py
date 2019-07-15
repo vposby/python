@@ -1,6 +1,7 @@
 """
 Egyptian War!
 v 2.0 - straight card play, single player, pygame gui
+!!!fix Slider.click()
 """
 
 import sys, random, pprint, pygame
@@ -22,46 +23,94 @@ pink = (224, 0, 224)
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Egyptian War')
 largeFont = pygame.font.Font(None, 60)
-mediumFont = pygame.font.Font(None, 45)
-smallFont = pygame.font.Font(None, 30)
-tinyFont = pygame.font.Font(None, 15)
+mediumFont = pygame.font.Font(None, 40)
+smallFont = pygame.font.Font(None, 20)
 
 #BEGIN GUI FUNCTIONS, CLASSES
 class Slider:
-	global screen, width, height
-
-	def __init__(self,location,id,min,max):
-		self.location = location #as (x,y)
-		self.id = id #as string
+	global screen, width, height, mouseX, mouseY
+	def __init__(self,pos,id,min,max,val):
+		self.val = val #as integer
+		self.id = id + ": " + str(self.val) #slider caption
+		caption = smallFont.render(self.id,1,white)
+		(x,y) = (int(pos[0]),int(pos[1]))
+		leftEnd = int(x+caption.get_width()+(width/50))
+		rightEnd = int(leftEnd+(width/6))
+		sldrHt = int(y+(caption.get_height()/2))
+		self.pos = [pos,leftEnd,rightEnd,sldrHt,[]] #positional values
 		self.min = min #as integer
 		self.max = max #as integer
+		for x in range(max-min+1):
+			widthMod = int(x*(rightEnd-leftEnd)/(max-1))
+			if x+1 != val: #values (min to max)
+				self.pos[4].append([grey,(leftEnd+widthMod,sldrHt),3])
+			else:
+				self.pos[4].append([green,(leftEnd+widthMod,sldrHt),4])
 
 	def draw(self):
-		(x,y) = (int(self.location[0]),int(self.location[1]))
-		label = smallFont.render(self.id,1,white)
-		screen.blit(label,(x,y))
-		leftEnd = int(x+label.get_width())
-		rightEnd = int(leftEnd+(width/6))
-		sldrHt = int(y+(label.get_height()/2))
-		pygame.draw.line(screen,white,(leftEnd,sldrHt),(rightEnd,sldrHt),3)
-		center = int((leftEnd+rightEnd)/2)
-		for x in range(self.max-self.min):
-			pygame.draw.circle(screen,grey,(center,sldrHt),3)
+		caption = smallFont.render(self.id,1,white) #use this to determine slider height
+		(x,y) = (self.pos[0][0]-int(width/33),self.pos[0][1])
+		(w,h) = (self.pos[2]-self.pos[0][0]+int(width/33),caption.get_height())
+		pygame.draw.rect(screen,black,(x,y,w,h)) #set blank rect for slider
+		screen.blit(caption,self.pos[0]) #caption
+		#slider line, values (min to max) below
+		pygame.draw.line(screen,white,(self.pos[1],self.pos[3]),(self.pos[2],self.pos[3]),3)
+		for x in range(len(self.pos[4])):
+			pygame.draw.circle(screen,self.pos[4][x][0],self.pos[4][x][1],self.pos[4][x][2])
+		pygame.display.update((x,y,w,h)) #(re)draw slider
 
 	def click(self):
-		pygame.display.update()
+		area = int(self.pos[4][1][1][0]-self.pos[1])/2
+		for x in range(len(self.pos[4])):
+			(self.pos[4][x][0],self.pos[4][x][2])=(grey,3) #reset circle to grey
+			if x == 0: #set new slider value
+				if mouseX>self.pos[1] and mouseX<self.pos[1]+area:
+					self.val = self.min
+			elif x+1 == len(self.pos[4]):
+				if mouseX>self.pos[2]-area and mouseX<self.pos[2]:
+					self.val = self.max
+			elif mouseX>self.pos[4][x][1][0]-area and mouseX<self.pos[4][x][1][0]+area:
+					self.val = x+1
+		(self.pos[4][self.val-1][0],self.pos[4][self.val-1][2])=(green,4) #value circle: green
+		self.id = self.id.replace(self.id[len(self.id)-1],str(self.val)) #set new slider caption
+		self.draw()
+
+sldrCompCount = Slider((width/18,29*height/100),"Competitors",1,5,1) #lobby screen
+
+class Label:
+	global screen, width, height
+	def __init__(self,x,y,color,caption,font,centered=False):
+		self.x = x #as integer
+		self.y = y #as integer
+		self.color = color #as (r,g,b)
+		self.caption = caption #as string
+		self.font = font #as font
+		self.centered = centered #as boolean
+
+	def draw(self):
+		text = self.font.render(self.caption,1,self.color)
+		if self.centered==False:
+			pos = (self.x,self.y)
+		else:
+			pos = text.get_rect(center=(self.x,self.y))
+		screen.blit(text,pos)
+
+lblTitle = Label(width/2,height/12,white,"Egyptian War",largeFont,True) #lobby screen
+lblPlayer = Label(width/4,23*height/100,white,"Player Options",mediumFont,True) #lobby screen
 
 def screenChange(screenName):
 	screen.fill(black)
 	if screenName == 'Lobby': #game setting selection
 		#render order (comment placeholders)
-		#game title
-		#player options label
-		#competitor count label
-		#competitor count slider, default 1
-		#competitor count slider (three components; bg color rect, white line, grey circle)
-		#competitor count slider value
-		#for x in range(competitor count):
+		lblTitle.draw() #game title
+		pygame.draw.line(screen,white,(width/18,height/6),(17*width/18,height/6),2)
+		pygame.draw.line(screen,white,(width/2,height/6),(width/2,19*height/20),2)
+		lblPlayer.draw() #player options label
+		sldrCompCount.draw() #competitor count slider
+		compList=[]
+		for i in range(sldrCompCount.val): #competitor difficulty sliders
+			heightMod=sldrCompCount.pos[3]+(i*sldrCompCount.pos[3])
+			Slider((width/24,(29+heightMod)*height/100),"Computer "+str(i+1)+" Difficulty",1,3,1)
 			#competitor difficulty labels
 			#competitor difficulty sliders (three components; bg color rect, white line, grey circle)
 			#competitor difficulty slider values
@@ -70,9 +119,9 @@ def screenChange(screenName):
 		#rules checkboxes
 		#new game button
 		#continue game button
-		placeholder = largeFont.render("Under Construction",1,orange)
-		position = placeholder.get_rect(center=(width/2,height/2))
-		screen.blit(placeholder,position)
+		#placeholder = largeFont.render("Under Construction",1,orange)
+		#position = placeholder.get_rect(center=(width/2,height/2))
+		#screen.blit(placeholder,position)
 
 	elif screenName=='Game': #actual game
 		#render order (comment placeholders)
@@ -150,18 +199,24 @@ for x in range(random.randrange(5, 11)): #shuffle cards
 		rearrange(deck,random.randrange(0, len(deck)))
 
 screen.fill(black)
-screenChange('Lobby')
-clicked = False
+scrName = 'Lobby'
+screenChange(scrName)
 
 while 1: #begin game code
+	(mouseX,mouseY) = pygame.mouse.get_pos()
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			sys.exit()
 		elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-			clicked = True
-			(mouseX,mouseY) = pygame.mouse.get_pos()
+			if scrName == 'Lobby': #all clickable objects in Lobby
+				if mouseY>sldrCompCount.pos[0][1] \
+				and mouseY<sldrCompCount.pos[0][1]+sldrCompCount.pos[3] \
+				and mouseX>sldrCompCount.pos[0][0] \
+				and mouseX<sldrCompCount.pos[2]:
+					sldrCompCount.click() #no else
+					#and draw corresponding number of competitor sliders
 
-	#PRESERVE CODE BELOW
+	#PRESERVE GAMEPLAY CODE BELOW
 	"""
 	human = 0
 	computer = 0
