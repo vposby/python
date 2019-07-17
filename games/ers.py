@@ -1,31 +1,32 @@
 """
 Egyptian War!
 v 2.0 - straight card play, single player, pygame gui
-!!!add rules checkboxes
+!!!reposition items without using magic numbers
 """
 
-import sys, random, pprint, pygame
+import sys,random,pprint,pygame
 pygame.init()
 
-size = width, height = (512, 338)
-black = (0, 0, 0)
-white = (255, 255, 255)
+size = width,height = (512,338)
+black = (0,0,0)
+white = (255,255,255)
 lgrey = (196,196,196)
-dgrey = (128, 128, 128)
-red = (224, 0, 0)
-orange = (255, 128, 0)
-yellow = (224, 224, 0)
-green = (0, 224, 0)
-cyan = (0, 255, 255)
-blue = (0, 0, 224)
-purple = (128, 0, 128)
-pink = (224, 0, 224)
+dgrey = (128,128,128)
+red = (224,0,0)
+orange = (255,128,0)
+yellow = (224,224,0)
+green = (0,224,0)
+cyan = (0,255,255)
+blue = (0,0,224)
+purple = (128,0,128)
+pink = (224,0,224)
 
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Egyptian War')
-largeFont = pygame.font.Font(None, 60)
-mediumFont = pygame.font.Font(None, 40)
-smallFont = pygame.font.Font(None, 20)
+largeFont = pygame.font.Font(None,50)
+mediumFont = pygame.font.Font(None,28)
+smallFont = pygame.font.Font(None,20)
+tinyFont = pygame.font.Font(None,14)
 
 #BEGIN GUI FUNCTIONS, CLASSES
 class Slider:
@@ -39,30 +40,30 @@ class Slider:
 			color = white
 		else:
 			color = dgrey
-		caption = smallFont.render(self.id,1,color)
+		caption = smallFont.render(self.id,1,color) #use this to determine slider height
 		(x,y) = (int(pos[0]),int(pos[1]))
 		leftEnd = int(x+caption.get_width()+(width/50))
 		rightEnd = int(leftEnd+(width/6))
 		sldrHt = int(y+(caption.get_height()/2))
 		self.pos = [pos,leftEnd,rightEnd,sldrHt,[]] #positional values
 		for x in range(max-min+1):
-			widthMod = int(x*(rightEnd-leftEnd)/(max-1))
-			if x+1 != vals[0]: #values (min to max)
-				self.pos[4].append([lgrey,(leftEnd+widthMod,sldrHt),3])
+			xMod = int(x*(rightEnd-leftEnd)/(max-min))
+			if x+min != vals[0]: #values (min to max)
+				self.pos[4].append([lgrey,(leftEnd+xMod,sldrHt),3])
 			else:
-				self.pos[4].append([green,(leftEnd+widthMod,sldrHt),4])
+				self.pos[4].append([green,(leftEnd+xMod,sldrHt),4])
 
 	def draw(self):
 		if self.active == True:
 			color = white
 		else:
 			color = dgrey
-		caption = smallFont.render(self.id,1,color) #use this to determine slider height
+		caption = smallFont.render(self.id,1,color)
 		(x,y) = (self.pos[0][0],self.pos[0][1])
 		(w,h) = (self.pos[2]-self.pos[0][0]+int(width/50),caption.get_height())
-		pygame.draw.rect(screen,black,(x,y,w,h)) #set blank rect for slider
-		screen.blit(caption,self.pos[0]) #caption
-		#slider line, values (min to max) below
+		pygame.draw.rect(screen,black,(x,y,w,h)) #set blank rect for caption, slider
+		screen.blit(caption,self.pos[0]) #draw caption
+		#draw slider line, value indicators (min to max)
 		pygame.draw.line(screen,color,(self.pos[1],self.pos[3]),(self.pos[2],self.pos[3]),3)
 		for x in range(len(self.pos[4])):
 			pygame.draw.circle(screen,self.pos[4][x][0],self.pos[4][x][1],self.pos[4][x][2])
@@ -70,23 +71,132 @@ class Slider:
 
 	def click(self):
 		area = int(self.pos[4][1][1][0]-self.pos[1])/2
+		min = self.vals[1][0]
 		for x in range(len(self.pos[4])):
 			(self.pos[4][x][0],self.pos[4][x][2])=(lgrey,3) #reset circle to lgrey
-			#print(self.pos[0])
 			if mouseX>self.pos[1] and mouseX<self.pos[1]+area: #minimum
 					self.vals[0] = self.vals[1][0]
 			elif mouseX>self.pos[2]-area and mouseX<self.pos[2]:
 					self.vals[0] = self.vals[1][1]
 			elif mouseX>self.pos[4][x][1][0]-area and mouseX<self.pos[4][x][1][0]+area:
-					self.vals[0] = x+1
+					self.vals[0] = x+min
 		val = self.vals[0]
-		#print(val,mouseX,mouseY)
-		(self.pos[4][val-1][0],self.pos[4][val-1][2])=(green,4) #value circle: green
+		(self.pos[4][val-min][0],self.pos[4][val-min][2])=(green,4) #value circle: green
 		self.id = self.id.split(":")[0]+": "+str(self.vals[2].get(val)) #set new slider caption
 		self.draw()
 
+	#implement later
+	def hover(self):
+		if "Competitor" in self.id:
+			text = "Number of opposing players"
+		elif "Difficulty" in self.id:
+			text = "corresponding computer difficulty" #change
+		else:
+			text = "Default ToolTip"
+		caption = tinyFont.render(text,1,lgrey)
+		(x,y) = (mouseX+5,mouseY+5)
+		(w,h) = (caption.get_width(),caption.get_height())
+		screen.blit(caption,(x,y))
+		pygame.display.update((x,y,w,h))
+
+class Label:
+	global screen, width, height
+	def __init__(self,x,y,color,text,font,centered=False):
+		self.x = x #as integer
+		self.y = y #as integer
+		self.color = color #as (r,g,b)
+		self.text = text #as string
+		caption = font.render(text,1,color)
+		height = caption.get_height()
+		self.font = (font,caption,height) #as font
+		self.centered = centered #as boolean
+
+	def draw(self):
+		if self.centered == False:
+			pos = (self.x,self.y)
+		else:
+			pos = self.font[1].get_rect(center=(self.x,self.y))
+		screen.blit(self.font[1],pos)
+
+class TextButton:
+	global screen, width, height
+	def __init__(self,location,size,color,caption):
+		self.location = location #as (x,y)
+		self.size = size #as (width,height)
+		self.color = color #as (r,g,b)
+		self.caption = caption #as string, \n delimiter optional
+
+	def draw(self):
+		(x,y,w,h) = (self.location[0],self.location[1],self.size[0],self.size[1])
+		pygame.draw.rect(screen,self.color,(x,y,w,h))
+		items = self.caption.split("\n")
+		for ind,item in enumerate(items):
+			captionText = mediumFont.render(item,1,white)
+			if len(items) == 1: yMod = h/2
+			else: yMod = (ind+2)*h/(2.5*len(items))
+			captionPos = captionText.get_rect(center=(x+(w/2),y+int(yMod)))
+			screen.blit(captionText,captionPos)
+
+	def click(self):
+		if self.caption == "New Game":
+			#set up new game using player inputs
+			screenChange("Game")
+		elif self.caption == "Continue Game":
+			#set up game using save file
+			screenChange("Game")
+
+class PlayPause: #draw menu screen icon
+	global screen, width, height
+	def __init__(self,location,size,mode="Play"):
+		self.location = location #as (x,y)
+		self.size = size #as int (because square)
+		self.mode = mode #as string (either play or pause)
+
+	def draw(self):
+		(x,y,z) = (self.location[0],self.location[1],self.size)
+		if mode == "Play":
+			pygame.draw.rect(screen,green,(x,y,z,z))
+			#draw play-lookin' triangle
+			pointList=[]
+			pointList.append((x+(z/4),y+(z/4)))
+			pointList.append((x+(3*z/4),y+(z/2)))
+			pointList.append((x+(z/4),y+(3*z/4)))
+			pygame.draw.polygon(screen,white,True,pointList,0)
+		elif mode == "Pause":
+			pygame.draw.rect(screen,red,(x,y,z,z))
+			#draw pause-lookin' rect pair
+			v=z/7
+			w=z/6
+			#(1)23(4)56(7)
+			rect1 = (x+(2*v),y+w,2*v,4*w)
+			rect2 = (x+(5*v),y+w,2*v,4*w)
+			pygame.draw.rect(screen, white,rect1)
+			pygame.draw.rect(screen, white,rect2)
+
+	def click(self):
+		if mode == "Pause":
+			self.mode = "Play"
+			self.draw()
+			screenChange("Lobby") #remove later
+		elif mode == "Play":
+			self.mode = "Pause"
+			self.draw()
+			#open dialog box
+			#START DIALOG BOX CODE
+			#return to lobby? yes no
+			#if yes, return to lobby
+				#screenChange("Lobby")
+			#if no, close dialog box
+				#self.mode = "Play"
+			#END DIALOG BOX CODE
+
+#Lobby Screen Items
+lblTitle = Label(width/2,height/10,white,"Egyptian War",largeFont,True)
+newY = lblTitle.y+(lblTitle.font[2]/2)+(height/20)
+lblPlayer = Label(width/18,newY,white,"Player Options",mediumFont,False)
+
+#slider dictionaries
 dictCount = {
-	1: 1,
 	2: 2,
 	3: 3,
 	4: 4,
@@ -99,66 +209,59 @@ dictDiff = {
 	3: "Hard"
 }
 
-countVals = [1,(1,5),dictCount]
-countPos = (width/18,29*height/100)
+#slider creation
+newY = lblPlayer.y+lblPlayer.font[2]+(height/25)
+countVals = [2,(2,5),dictCount]
+countPos = (width/18,newY)
 countID = "Competitors"
-sldrCount = Slider(countVals,countPos,countID,True) #lobby screen
-countHeight = (sldrCount.pos[3]-sldrCount.pos[0][1])*2
-countBottom = sldrCount.pos[0][1]
-hMod = countHeight+height/25
+sldrCount = Slider(countVals,countPos,countID,True)
+countHeight = int((sldrCount.pos[3]-sldrCount.pos[0][1])*2)
+countBottom = int(sldrCount.pos[0][1])
+yMod = countHeight+int(height/25)
 diffVals = [1,(1,3),dictDiff]
 diffs = []
 for x in range(sldrCount.vals[1][1]):
-	diffPos = (width/12,countBottom+(hMod*(x+1)))
+	diffPos = (width/12,countBottom+(yMod*(x+1)))
 	diffID = "Comp "+str(x+1)+" Difficulty"
 	if x < sldrCount.vals[0]:
 		diffActive = True
 	else:
 		diffActive = False
-	sldrDiff = Slider(diffVals,diffPos,diffID,diffActive) #lobby screen
+	sldrDiff = Slider(diffVals,diffPos,diffID,diffActive)
 	diffs.append(sldrDiff)
 
-class Label:
-	global screen, width, height
-	def __init__(self,x,y,color,caption,font,centered=False):
-		self.x = x #as integer
-		self.y = y #as integer
-		self.color = color #as (r,g,b)
-		self.caption = caption #as string
-		self.font = font #as font
-		self.centered = centered #as boolean
+#checkbox creation
+newX = diffs[len(diffs)-1].pos[2]+(width/25)
+newY = lblTitle.y+(lblTitle.font[2]/2)+(height/20)
+lblRules = Label(newX,newY,white,"Gameplay Rules",mediumFont,False)
 
-	def draw(self):
-		text = self.font.render(self.caption,1,self.color)
-		if self.centered==False:
-			pos = (self.x,self.y)
-		else:
-			pos = text.get_rect(center=(self.x,self.y))
-		screen.blit(text,pos)
+#button creation
 
-lblTitle = Label(width/2,height/12,white,"Egyptian War",largeFont,True) #lobby screen
-lblPlayer = Label(width/4,23*height/100,white,"Player Options",mediumFont,True) #lobby screen
+#Game Screen items
+playPause = PlayPause((17*width/20,height/20),width/11,red) #game screen
 
 def screenChange(screenName):
 	screen.fill(black)
 	if screenName == 'Lobby': #game setting selection
 		#render order (comment placeholders)
 		lblTitle.draw() #game title
-		pygame.draw.line(screen,white,(width/18,height/6),(17*width/18,height/6),2)
-		pygame.draw.line(screen,white,(3*width/5,height/6),(3*width/5,19*height/20),2)
 		lblPlayer.draw() #player options label
+		oldY = lblTitle.y+(lblTitle.font[2]/5)+(height/20)
+		pygame.draw.line(screen,white,(width/18,oldY),(17*width/18,oldY),2)
 		sldrCount.draw() #competitor count slider
 		for diff in diffs:
-			diff.draw()
-		#competitor difficulty sliders
-		#rules label
+			diff.draw() #competitor difficulty sliders
+		newX = diffs[len(diffs)-1].pos[2]+(width/50)
+		diffHeight = int((diffs[len(diffs)-1].pos[3]-diffs[len(diffs)-1].pos[0][1])*2)
+		diffBottom = int(diffs[len(diffs)-1].pos[0][1])
+		yMod = diffHeight+int(height/33)
+		newY = diffBottom+yMod
+		pygame.draw.line(screen,white,(newX,oldY),(newX,newY),2)
+		lblRules.draw() #rules label
 		#slaps checkbox
 		#rules checkboxes
 		#new game button
 		#continue game button
-		#placeholder = largeFont.render("Under Construction",1,orange)
-		#position = placeholder.get_rect(center=(width/2,height/2))
-		#screen.blit(placeholder,position)
 
 	elif screenName=='Game': #actual game
 		#render order (comment placeholders)
@@ -174,7 +277,6 @@ def screenChange(screenName):
 		position = placeholder.get_rect(center=(width/2,height/2))
 		screen.blit(placeholder,position)
 	pygame.display.update()
-
 #END GUI FUNCTIONS
 
 #BEGIN GAMEPLAY FUNCTIONS
