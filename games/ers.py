@@ -33,7 +33,7 @@ class Slider:
 	global screen, width, height, mouseX, mouseY
 	def __init__(self,vals=[1,(1,2),{1:1,2:2}],pos=(0,0),id="Default",active=True):
 		self.vals = vals #output value as int,range of values as (min=int,max=int),list of outputs as dict
-		(min,max)=(self.vals[1][0],self.vals[1][1])
+		(min,max)=self.vals[1]
 		self.id = id + ": " + str(self.vals[2].get(self.vals[0])) #slider default caption
 		self.active = active #as boolean; allow/disallow user interactivity
 		if active == True:
@@ -59,7 +59,7 @@ class Slider:
 		else:
 			color = dgrey
 		caption = smallFont.render(self.id,1,color)
-		(x,y) = (self.pos[0][0],self.pos[0][1])
+		(x,y) = self.pos[0]
 		(w,h) = (self.pos[2]-self.pos[0][0]+int(width/50),caption.get_height())
 		pygame.draw.rect(screen,black,(x,y,w,h)) #set blank rect for caption, slider
 		screen.blit(caption,self.pos[0]) #draw caption
@@ -101,9 +101,8 @@ class Slider:
 
 class Label:
 	global screen, width, height
-	def __init__(self,x,y,color,text,font,centered=False):
-		self.x = x #as integer
-		self.y = y #as integer
+	def __init__(self,pos,color,text,font,centered=False):
+		self.pos = pos #as (x,y)
 		self.color = color #as (r,g,b)
 		self.text = text #as string
 		caption = font.render(text,1,color)
@@ -113,29 +112,31 @@ class Label:
 
 	def draw(self):
 		if self.centered == False:
-			pos = (self.x,self.y)
+			pos = self.pos
 		else:
-			pos = self.font[1].get_rect(center=(self.x,self.y))
+			pos = self.font[1].get_rect(center=(self.pos))
 		screen.blit(self.font[1],pos)
 
 class TextButton:
 	global screen, width, height
-	def __init__(self,location,size,color,caption):
-		self.location = location #as (x,y)
-		self.size = size #as (width,height)
-		self.color = color #as (r,g,b)
-		self.caption = caption #as string, \n delimiter optional
+	def __init__(self,location,caption,active=False):
+		self.caption = caption #as string
+		captionText = mediumFont.render(caption,1,white)
+		(x,y) = location
+		(w,h) = (captionText.get_width()+15,captionText.get_height()+15)
+		self.location = (x,y,w,h) #as (x,y)
+		self.active = active #as boolean
 
 	def draw(self):
-		(x,y,w,h) = (self.location[0],self.location[1],self.size[0],self.size[1])
-		pygame.draw.rect(screen,self.color,(x,y,w,h))
-		items = self.caption.split("\n")
-		for ind,item in enumerate(items):
-			captionText = mediumFont.render(item,1,white)
-			if len(items) == 1: yMod = h/2
-			else: yMod = (ind+2)*h/(2.5*len(items))
-			captionPos = captionText.get_rect(center=(x+(w/2),y+int(yMod)))
-			screen.blit(captionText,captionPos)
+		(x,y,w,h) = self.location
+		captionText = mediumFont.render(self.caption,1,white)
+		captionPos = captionText.get_rect(center=(x+(w/2),y+(h/2)))
+		if self.active == True:
+			color = lgrey
+		else:
+			color = dgrey
+		pygame.draw.rect(screen,color,(x,y,w,h))
+		screen.blit(captionText,captionPos)
 
 	def click(self):
 		if self.caption == "New Game":
@@ -191,9 +192,9 @@ class PlayPause: #draw menu screen icon
 			#END DIALOG BOX CODE
 
 #Lobby Screen Items
-lblTitle = Label(width/2,height/10,white,"Egyptian War",largeFont,True)
-newY = lblTitle.y+(lblTitle.font[2]/2)+(height/20)
-lblPlayer = Label(width/18,newY,white,"Player Options",mediumFont,False)
+lblTitle = Label((width/2,height/10),white,"Egyptian War",largeFont,True)
+newY = lblTitle.pos[1]+(lblTitle.font[2]/2)+(height/20)
+lblPlayer = Label((width/18,newY),white,"Player Options",mediumFont,False)
 
 #slider dictionaries
 dictCount = {
@@ -210,11 +211,11 @@ dictDiff = {
 }
 
 #slider creation
-newY = lblPlayer.y+lblPlayer.font[2]+(height/25)
+newY = lblPlayer.pos[1]+lblPlayer.font[2]+(height/25)
 countVals = [2,(2,5),dictCount]
 countPos = (width/18,newY)
 countID = "Competitors"
-sldrCount = Slider(countVals,countPos,countID,True)
+sldrCount = Slider(countVals,countPos,countID,True) #competitor slider
 countHeight = int((sldrCount.pos[3]-sldrCount.pos[0][1])*2)
 countBottom = int(sldrCount.pos[0][1])
 yMod = countHeight+int(height/25)
@@ -227,15 +228,17 @@ for x in range(sldrCount.vals[1][1]):
 		diffActive = True
 	else:
 		diffActive = False
-	sldrDiff = Slider(diffVals,diffPos,diffID,diffActive)
+	sldrDiff = Slider(diffVals,diffPos,diffID,diffActive) #computer difficulty slider
 	diffs.append(sldrDiff)
 
 #checkbox creation
 newX = diffs[len(diffs)-1].pos[2]+(width/25)
-newY = lblTitle.y+(lblTitle.font[2]/2)+(height/20)
-lblRules = Label(newX,newY,white,"Gameplay Rules",mediumFont,False)
+newY = lblTitle.pos[1]+(lblTitle.font[2]/2)+(height/20)
+lblRules = Label((newX,newY),white,"Gameplay Rules",mediumFont,False)
 
 #button creation
+ng = TextButton((0,0),"New Game",True) #new game
+cg = TextButton((0,0),"Continue Game",False) #continue game
 
 #Game Screen items
 playPause = PlayPause((17*width/20,height/20),width/11,red) #game screen
@@ -246,7 +249,7 @@ def screenChange(screenName):
 		#render order (comment placeholders)
 		lblTitle.draw() #game title
 		lblPlayer.draw() #player options label
-		oldY = lblTitle.y+(lblTitle.font[2]/5)+(height/20)
+		oldY = lblTitle.pos[1]+(lblTitle.font[2]/5)+(height/20)
 		pygame.draw.line(screen,white,(width/18,oldY),(17*width/18,oldY),2)
 		sldrCount.draw() #competitor count slider
 		for diff in diffs:
@@ -348,10 +351,10 @@ while 1: #begin game code
 			sys.exit()
 		elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
 			if scrName == 'Lobby': #all clickable objects in Lobby
-				if mouseY>sldrCount.pos[0][1] \
-				and mouseY<sldrCount.pos[0][1]+sldrCount.pos[3] \
+				if mouseY>sldrCount.pos[3]-15 \
+				and mouseY<sldrCount.pos[3]+15 \
 				and mouseX>sldrCount.pos[0][0] \
-				and mouseX<sldrCount.pos[2]: #no else
+				and mouseX<sldrCount.pos[2]:
 					sldrCount.click()
 					for ind,diff in enumerate(diffs):
 						if ind < sldrCount.vals[0]:
@@ -359,6 +362,14 @@ while 1: #begin game code
 						else:
 							diff.active = False
 						diff.draw()
+				for ind,diff in enumerate(diffs):
+					if diff.active == True \
+					and mouseY>diff.pos[3]-15 \
+					and mouseY<diff.pos[3]+15 \
+					and mouseX>diff.pos[0][0] \
+					and mouseX<diff.pos[2]:
+						diff.click()
+
 
 	#PRESERVE GAMEPLAY CODE BELOW
 	"""
