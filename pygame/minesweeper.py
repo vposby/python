@@ -44,7 +44,7 @@ class HouseIcon: #draw menu screen icon
         pygame.draw.line(screen,white,(x+(z/25),y+(9*z/20)),(x+(z/2),y+(z/25)),2)
         pygame.draw.line(screen,white,(x+(z/2),y+(z/25)),(x+(24*z/25),y+(9*z/20)),2)
         pygame.draw.rect(screen,white,(x+(z/6),y+(17*z/50),2*z/3,7*z/12),2)
-        pygame.draw.rect(screen,white,(x+(3*z/8),y+(87*z/200),z/4,49*z/100),2)
+        pygame.draw.rect(screen,white,(x+(3*z/8),y+(87*z/200),z/4,49*z/100),1)
 
     def click(self):
         screenChange(1)
@@ -82,10 +82,11 @@ class Button:
 btnNG = Button((width/4,20*height/40),(width/2,height/8),green,"New Game")
 btnHTP = Button((width/4,26*height/40),(width/2,height/8),blue,"How to Play")
 btnHS = Button((width/4,32*height/40),(width/2,height/8),purple,"High Scores")
-btnSML = Button((width/12,8*height/20),(4*width/11,4*width/11),red,"Small\n10x10")
-btnMED = Button((7*width/12,8*height/20),(4*width/11,4*width/11),pink,"Medium\n15x15")
-btnLRG = Button((width/12,13*height/20),(4*width/11,4*width/11),orange,"Large\n20x20")
-btnCUS = Button((7*width/12,13*height/20),(4*width/11,4*width/11),yellow,
+#(12)3456789(1011)12131415161718(1920)
+btnSML = Button((5*width/40,7*height/20),(7*width/20,7*width/20),red,"Small\n10x10")
+btnMED = Button((21*width/40,7*height/20),(7*width/20,7*width/20),pink,"Medium\n15x15")
+btnLRG = Button((5*width/40,13*height/20),(7*width/20,7*width/20),orange,"Large\n20x20")
+btnCUS = Button((21*width/40,13*height/20),(7*width/20,7*width/20),yellow,
 "Custom\n"+str(custWd)+"x"+str(custHt))
 
 class Menu:
