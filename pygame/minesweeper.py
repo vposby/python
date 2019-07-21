@@ -87,30 +87,32 @@ class Menu:
         items = []
         lines = self.msg.split("\n")
         menuFont = pygame.font.Font(None,int(height/(30+len(lines))))
-        w = h = 1
         for ind,line in enumerate(lines):
             msgText = menuFont.render(line,1,black)
-            if item[1][0] > w:
-                w = msgText.get_width()
-            heightMod = msgText.get_height()*(ind+1)
-            msgPos = (x,y+heightMod)
-            item.append((msgText,msgPos))
-        lblY = y+(menuText.get_height()*len(lines))
+            xMod = width/50
+            yMod = msgText.get_height()*(ind+1)
+            msgPos = (x+xMod,y+yMod)
+            items.append([msgText,msgPos])
+        yMod = (msgText.get_height()*(len(lines)+1))+height/50
+        lblRowWidth = 0
         for ind,lbl in enumerate(self.opts):
-            lblText = menuFont.render(opt[0],1,black)
-            if item[1][1] > h:
-                h = lblText.get_height()
-            lblX = (((ind+1)*x)/(len(self.opts)+1))
-            lblPos = (x+lblX,lblY)
-            item.append((lblText,lblPos))
-            item.append(("rect",(x+lblX,lblY+lblText.get_height())))
-        w += width/50
-        h += height/50
+            lblText = menuFont.render(lbl[0],1,black)
+            items.append([lblText])
+            lblRowWidth += items(len(items)-1).get_width()+width/50
+            optText = menuFont.render(str(lbl[1][0]),1,black)
+            items.append([optText])
+        w = width/2
+        h = yMod+(lblText.get_height()+optText.get_height())+height/50
+        self.pos = (self.pos[0],self.pos[1],w,h)
         pygame.draw.rect(screen,grey,(x,y,w,h))
-        for item in items:
-            if item[0] == "rect":
-                (w1,h1) = (item[1][0],item[1][1])
-                pygame.draw.rect(screen,white,(x,y,w1,h1))
+        for ind,item in enumerate(items):
+            if ind > len(lines)-1:
+                (x1,y1) = (item[1][0],item[1][1]) #modify
+                item.append((x1,y1))
+                if ind%2 != len(lines)%2:
+                    (w1,h1) = (item[0].get_width(),item[0].get_height())
+                    pygame.draw.rect(screen,white,(x1,y1,w1,h1))
+            screen.blit(item[0],item[1])
         pygame.display.update((x,y,w,h))
         #add choice buttons
 
@@ -159,15 +161,18 @@ def screenChange(index):
             menuText = "Choose your grid size below by \nscrolling the mouse wheel."
             menuOpt = [["Grid Width",(10,20)],["Grid Height",(10,20)]]
             menuCUS = Menu((width/4,height/3),menuText,menuOpt)
-            #nnnnn(yyyy)nn(yyyy)nnnnn
-            menuBtnW = menuCUS.pos[0]/5
-            menuBtnH = pygame.font.Font(None,int(height/(30+len\
-            (menuText.split("\n"))))).render("l",1,black).get_height()
-            menuBtnSize = (menuBtnW,menuBtnH)
-            btnST = Button((,),(menuBtnSize),grey,"Start")
-            btnCN = Button((,),(menuBtnSize),grey,"Cancel")
             objList.append(menuCUS)
             """
+            #nnnnn(yyyy)nn(yyyy)nnnnn
+            menuBtnW = menuCUS.pos[2]/5
+            menuBtnH = pygame.font.Font(None,int(height/(30+len\
+            (menuText.split("\n"))))).render("l",1,black).get_height()+4
+            menuBtnSize = (menuBtnW,menuBtnH)
+            btnSTpos = (menuCUS.pos[0],menuCUS.pos[1])
+            btnCNpos = (menuCUS.pos[0],menuCUS.pos[1])
+            btnST = Button((btnSTpos),(menuBtnSize),grey,"Start")
+            btnCN = Button((btnCNpos),(menuBtnSize),grey,"Cancel")
+            objList.append(menuCUS)
             screen.blit(tinyFont.render("Choose your grid size below by",1,black),(boxx,(height/3)+(height/100)))
             screen.blit(tinyFont.render("scrolling the mouse wheel.",1,black),(boxx,(height/3)+(3*height/100)))
             screen.blit(tinyFont.render("Grid Width:",1,black),(boxx,21*height/50))
@@ -185,8 +190,8 @@ def screenChange(index):
             obj.draw()
     elif index == 3:
         scrName = "game"
-        for cell in cells:
-            w = width/
+        #for cell in cells:
+            #w = width/
     elif index == 4:
         scrName = "directions" #directions
         home.draw() #back to home
@@ -280,7 +285,7 @@ while 1:
                 if mouseX>home.pos[0] and mouseX<home.pos[0]+home.size:
                     home.click() #main menu
         elif scrName == "game":
-
+            pygame.display.update() #change later
         clicked = False
 
     if scrolling == True:
