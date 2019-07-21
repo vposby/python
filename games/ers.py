@@ -157,7 +157,6 @@ class PlayPause: #draw menu screen icon
 		(x,y,z) = (self.location[0],self.location[1],self.size)
 		if mode == "Play":
 			pygame.draw.rect(screen,green,(x,y,z,z))
-			#draw play-lookin' triangle
 			pointList=[]
 			pointList.append((x+(z/4),y+(z/4)))
 			pointList.append((x+(3*z/4),y+(z/2)))
@@ -165,10 +164,8 @@ class PlayPause: #draw menu screen icon
 			pygame.draw.polygon(screen,white,True,pointList,0)
 		elif mode == "Pause":
 			pygame.draw.rect(screen,red,(x,y,z,z))
-			#draw pause-lookin' rect pair
 			v=z/7
 			w=z/6
-			#(1)23(4)56(7)
 			rect1 = (x+(2*v),y+w,2*v,4*w)
 			rect2 = (x+(5*v),y+w,2*v,4*w)
 			pygame.draw.rect(screen, white,rect1)
