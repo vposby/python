@@ -1,7 +1,7 @@
 """
 Egyptian War!
 v 2.0 - straight card play, single player, pygame gui
-!!!reposition items without using magic numbers
+!!!add positions to checkboxes
 """
 
 import sys,random,pprint,pygame
@@ -31,7 +31,7 @@ tinyFont = pygame.font.Font(None,14)
 #BEGIN GUI FUNCTIONS, CLASSES
 class Slider:
 	global screen, width, height, mouseX, mouseY
-	def __init__(self,vals=[1,(1,2),{1:1,2:2}],pos=(0,0),id="Default",active=True):
+	def __init__(self,vals=[1,(1,2),{1:1,2:2}],pos=(0,0),id="Default",active=False):
 		self.vals = vals #output value as int,range of values as (min=int,max=int),list of outputs as dict
 		(min,max)=self.vals[1]
 		self.id = id + ": " + str(self.vals[2].get(self.vals[0])) #slider default caption
@@ -101,7 +101,7 @@ class Slider:
 
 class Label:
 	global screen, width, height
-	def __init__(self,pos,color,text,font,centered=False):
+	def __init__(self,pos,color,text,font,*centered=False):
 		self.pos = pos #as (x,y)
 		self.color = color #as (r,g,b)
 		self.text = text #as string
@@ -119,7 +119,7 @@ class Label:
 
 class TextButton:
 	global screen, width, height
-	def __init__(self,location,caption,active=False):
+	def __init__(self,location,caption="Default",*active=False):
 		self.caption = caption #as string
 		captionText = mediumFont.render(caption,1,white)
 		(x,y) = location
@@ -148,21 +148,22 @@ class TextButton:
 
 class PlayPause: #draw menu screen icon
 	global screen, width, height
-	def __init__(self,location,size,mode="Play"):
+	mode = [(1,"Play"),(0,"Pause")]
+	def __init__(self,location,size):
 		self.location = location #as (x,y)
 		self.size = size #as int (because square)
-		self.mode = mode #as string (either play or pause)
+		self.mode = mode[0] #default is play
 
 	def draw(self):
 		(x,y,z) = (self.location[0],self.location[1],self.size)
-		if mode == "Play":
+		if self.mode[1] == "Play":
 			pygame.draw.rect(screen,green,(x,y,z,z))
 			pointList=[]
 			pointList.append((x+(z/4),y+(z/4)))
 			pointList.append((x+(3*z/4),y+(z/2)))
 			pointList.append((x+(z/4),y+(3*z/4)))
 			pygame.draw.polygon(screen,white,True,pointList,0)
-		elif mode == "Pause":
+		elif self.mode[1] == "Pause":
 			pygame.draw.rect(screen,red,(x,y,z,z))
 			v=z/7
 			w=z/6
@@ -172,12 +173,10 @@ class PlayPause: #draw menu screen icon
 			pygame.draw.rect(screen, white,rect2)
 
 	def click(self):
-		if mode == "Pause":
-			self.mode = "Play"
+		if self.mode[1] == "Pause":
 			self.draw()
 			screenChange("Lobby") #remove later
-		elif mode == "Play":
-			self.mode = "Pause"
+		elif self.mode[1] == "Play":
 			self.draw()
 			#open dialog box
 			#START DIALOG BOX CODE
@@ -187,6 +186,30 @@ class PlayPause: #draw menu screen icon
 			#if no, close dialog box
 				#self.mode = "Play"
 			#END DIALOG BOX CODE
+		self.mode = mode[self.mode[0]] #toggle
+
+class Checkbox:
+	global screen, width, height
+	def __init__(self,pos,caption,*val=False,active=False):
+		self.pos = pos #as (x,y)
+		self.caption = caption #as string
+		self.val = val #as boolean
+		self.active = active #as boolean
+
+	def draw(self):
+		(x,y) = (self.pos[0],self.pos[1])
+		cbText = smallFont.render(self.caption,1,white)
+		(w,h) = (caption.get_height()/2,caption.get_height()/2)
+		pygame.draw.rect(screen,white,(x,y+(h/2),w,h),1)
+		if self.val == True:
+			pointList = [(x,y+(h/2)),(x+(w/2),y+h),(x+w,y-h)]
+			pygame.draw.polygon(screen,white,pointList,1)
+		(x,y) = (x+(w/2),y)
+		screen.blit(cbText,(x,y))
+
+	def click(self):
+		self.val = not self.val #toggle
+		self.draw()
 
 #Lobby Screen Items
 lblTitle = Label((width/2,height/10),white,"Egyptian War",largeFont,True)
@@ -232,6 +255,19 @@ for x in range(sldrCount.vals[1][1]):
 newX = diffs[len(diffs)-1].pos[2]+(width/25)
 newY = lblTitle.pos[1]+(lblTitle.font[2]/2)+(height/20)
 lblRules = Label((newX,newY),white,"Gameplay Rules",mediumFont,False)
+#add positions for these! also, find way to count number of created objects
+cbSlap = Checkbox((),"Slaps?",active=True)
+cbDouble = Checkbox((),"Doubles")
+cbSandwich = Checkbox((),"Sandwiches")
+cbHoagie = Checkbox((),"Hoagies")
+cbConsecutive = Checkbox((),"Consecutives")
+rules = {
+	cbSlap: cbSlap.val,
+	cbDouble: cbDouble.val,
+	cbSandwich: cbSandwich.val,
+	cbHoagie: cbHoagie.val,
+	cbConsecutive: cbConsecutive.val
+}
 
 #button creation
 ng = TextButton((0,0),"New Game",True) #new game
