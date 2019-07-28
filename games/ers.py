@@ -117,11 +117,11 @@ class TextButton:
 		(x,y) = location #as (x,y)
 		captionText = mediumFont.render(caption,1,white)
 		(w,h) = (captionText.get_width()+15,captionText.get_height()+15)
-		self.location = (x,y,w,h)
+		self.location = [x,y,(w,h)] #list so x and y can change as needed
 		self.active = True #as boolean; default = True
 
 	def draw(self):
-		(x,y,w,h) = self.location
+		(x,y,(w,h)) = self.location
 		captionText = mediumFont.render(self.caption,1,white)
 		captionPos = captionText.get_rect(center=(x+(w/2),y+(h/2)))
 		color = lgrey if self.active == True else dgrey
@@ -261,6 +261,15 @@ for x in range(sldrCount.vals[1][1]):
 	sldrDiff.active = True if x < sldrCount.vals[0] else False
 	diffs.append(sldrDiff)
 
+#button creation
+ng = TextButton((0,0),'New Game') #new game
+cg = TextButton((0,0),'Continue Game') #continue game
+cg.active = False #set as false to begin with; set as true if save file exists
+btnWidth = int(ng.location[2][0]+(width/50)+cg.location[2][0])
+ng.location[0] = int((width-btnWidth)/2) #change ng x coord
+cg.location[0] = int(ng.location[0]+(btnWidth-cg.location[2][0])) #change cg x coord
+ng.location[1] = cg.location[1] = int(countBottom+(yMod*(sldrCount.vals[1][1]+1.75))) #change y coord
+
 #checkbox creation
 newX = diffs[len(diffs)-1].pos[2]+(width/25)
 newY = lblTitle.pos[1]+(lblTitle.font[2]/2)+(height/20)
@@ -276,11 +285,6 @@ for x in range(len(dictRules)):
 	cbRule = Checkbox((newX,newY),dictRules[x+1])
 	cbRule.active = False
 	rules.append(cbRule)
-
-#button creation
-ng = TextButton((0,0),'New Game') #new game
-cg = TextButton((0,0),'Continue Game') #continue game
-cg.active = False #set as false to begin with; set as true if save file exists
 
 #Game Screen items
 playPause = PlayPause((17*width/20,height/20),width/11) #game screen
@@ -396,7 +400,6 @@ while 1: #begin game code
 		elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
 			clicked = True
 		if clicked:
-			print(str(mouseX)+','+str(mouseY))
 			if scrName == 'Lobby': #all clickable objects in Lobby
 				if mouseY>sldrCount.pos[3]-15 \
 				and mouseY<sldrCount.pos[3]+15 \
