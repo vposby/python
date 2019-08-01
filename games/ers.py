@@ -243,8 +243,9 @@ class Checkbox:
 	def click(self):
 		self.val=not self.val #toggle value
 		self.draw()
+#END GUI FUNCTIONS, CLASSES
 
-#Lobby Screen Items
+#Begin Lobby screen items
 lblTitle=Label((width/2,height/10),white,'Egyptian War',largeFont,True)
 newY=lblTitle.pos[1]+(lblTitle.font[2]/2)+(height/20)
 lblPlayer=Label((width/18,newY),white,'Player Options',mediumFont,False)
@@ -313,6 +314,7 @@ for x in range(len(dictRules)):
 	cbRule=Checkbox((newX,newY),dictRules[x+1]) #individual rule checkbox
 	cbRule.active=False
 	rules.append(cbRule)
+#End Lobby screen items
 
 #Game Screen items
 playPause=PlayPause((17*width/20,height/20),width/11) #play/pause button
@@ -415,7 +417,7 @@ while 1: #begin game code
 		elif event.type==pygame.MOUSEBUTTONDOWN and event.button==1:
 			clicked=True
 		if clicked:
-			if scrName=='Lobby': #all clickable objects on Lobby screen
+			if scrName='Lobby': #all clickable objects on Lobby screen
 				if sldrCount.pos[0][0]<mouseX<sldrCount.pos[2] \
 				and sldrCount.pos[3]-15<mouseY<sldrCount.pos[3]+15:
 					sldrCount.click() #update master slider
