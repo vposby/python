@@ -2,13 +2,17 @@
 Egyptian War!
 v 2.0 - straight card play, single player, pygame gui
 !!!make playPause button switch back to Lobby screen
-!!!add .hide() to all objects
+!!!fix KeyErrors on TextButtons
 """
 
 import sys,random,pprint,pygame
-pygame.init()
+from datetime import datetime
 
+#INITIALIZE PYGAME
+pygame.init()
 size=width,height=(512,338)
+
+#COLORS
 black=(0,0,0)
 white=(255,255,255)
 lgrey=(196,196,196)
@@ -22,31 +26,44 @@ blue=(0,0,224)
 purple=(128,0,128)
 pink=(224,0,224)
 
+#WINDOW ATTRIBUTES
 screen=pygame.display.set_mode(size)
 pygame.display.set_caption('Egyptian War')
+
+#FONTS
 largeFont=pygame.font.Font(None,50)
 mediumFont=pygame.font.Font(None,28)
 smallFont=pygame.font.Font(None,20)
 tinyFont=pygame.font.Font(None,14)
 
-#BEGIN GUI FUNCTIONS, CLASSES
+#OBJECT TRACKING DICTIONARY
+dictScreen = {}
+
+#RULE TRACKING LIST
+slaps=[]
+
+#BEGIN GUI CLASSES
 class Slider:
 	global screen, width, height, mouseX, mouseY
 	def __init__(self,vals=[1,(1,2),{1:1,2:2}],pos=(0,0),id='Default'):
 		self.vals=vals #output as int, val range as (min=int,max=int), output list as dict
 		#NOTE!!! output list dictionary must have integers as keys
 		(min,max)=self.vals[1]
-		self.id=id+': '+ str(self.vals[2].get(self.vals[0])) #caption
+		self.id=id+': '+str(self.vals[2].get(self.vals[0])) #caption
 		self.active=True #as boolean; allow/disallow user interactivity
 		color=white if self.active else dgrey
 		caption=smallFont.render(self.id,1,color)
 		key=maxLen=0
 		for item in vals[2]: #find longest possible output
-			key=item if len(str(vals[2][item]))>maxLen else key
+			if len(str(vals[2][item]))>maxLen:
+				key,maxLen=item,len(str(vals[2][item]))
+			else:
+				key,maxLen=key,maxLen
 		(x,y)=(int(pos[0]),int(pos[1]))
-		leftEnd=int(x+vals[2][key].get_width()+(width/50)) #length of the longest item
+		maxLen=smallFont.render(id+': '+str(vals[2][key]),1,color)
+		leftEnd=int(x+maxLen.get_width()+(width/50)) #length of the longest item
 		rightEnd=int(leftEnd+(width/6))
-		sldrHt=int(y+(vals[2][key].get_height()/2))
+		sldrHt=int(y+(maxLen.get_height()/2))
 		self.pos=[pos,leftEnd,rightEnd,sldrHt] #where the slider line goes
 		self.points=[]
 		for x in range(max-min+1):
@@ -108,7 +125,6 @@ class Label:
 		height=caption.get_height()
 		self.font=(font,caption,height) #as font
 		self.centered=centered #as boolean
-		self.visible=True #as boolean; default True
 
 	def draw(self):
 		w=self.font[1].get_width()+15
@@ -119,11 +135,6 @@ class Label:
 		screen.blit(self.font[1],pos)
 		pygame.display.update(lblRect)
 
-	def hide(self):
-		w=self.font[1].get_width()+15
-		h=self.font[1].get_height()+15
-		lblRect = (self.pos[0],self.pos[1],w,h)
-		pygame.draw.rect(screen,black,lblRect)
 
 class TextButton:
 	global screen, width, height
@@ -170,6 +181,7 @@ class PlayPause: #draw menu screen icon
 		self.pos=pos #as (x,y)
 		self.size=size #as int (because square)
 		self.paused=False #as boolean; default "Pause"; pause icon shows
+		self.active=True #as boolean; always True
 
 	def draw(self):
 		(x,y,z)=(self.pos[0],self.pos[1],self.size)
@@ -206,15 +218,6 @@ class PlayPause: #draw menu screen icon
 			#END DIALOG BOX CODE
 		self.paused=not self.paused #toggle
 		self.draw()
-		(x,y) = (width/2,height/2)
-		for i in range(3):
-			pygame.time.wait(100)
-			a = largeFont.render(str(i+1),1,white)
-			(w,h) = (a.get_width(),a.get_height())
-			b = a.get_rect(center=(x,y))
-			pygame.draw.rect(screen,black,(x,y,w,h))
-			screen.blit(a,b)
-			pygame.display.update((x,y,w,h))
 		screenChange(1) #change to lobby screen
 
 class Checkbox:
@@ -243,14 +246,18 @@ class Checkbox:
 	def click(self):
 		self.val=not self.val #toggle value
 		self.draw()
-#END GUI FUNCTIONS, CLASSES
+#END GUI CLASSES
 
-#Begin Lobby screen items
-lblTitle=Label((width/2,height/10),white,'Egyptian War',largeFont,True)
-newY=lblTitle.pos[1]+(lblTitle.font[2]/2)+(height/20)
+#BEGIN OBJECT RENDER DEFINITIONS
+#Lobby screen
+dictScreen.update({1:[True,{}]}) #prep index of Lobby screen items; initially visible
+lblTitle=Label((width/2,height/8),white,'Egyptian War',largeFont,True)
+dictScreen[1][1].update({'lblTitle':lblTitle}) #add to Lobby screen index
+newY=lblTitle.pos[1]+(lblTitle.font[2]/2)+(height/25)
 lblPlayer=Label((width/18,newY),white,'Player Options',mediumFont,False)
+dictScreen[1][1].update({'lblPlayer':lblPlayer}) #add to Lobby screen index
 
-#slider dictionaries
+#slider, checkbox dictionaries
 dictCount={
 	2: 2,
 	3: 3,
@@ -276,99 +283,127 @@ newY=lblPlayer.pos[1]+lblPlayer.font[2]+(height/25)
 countVals=[2,(2,5),dictCount]
 countPos=(width/18,newY)
 countID='Competitors'
-sldrCount=Slider(countVals,countPos,countID) #competitor slider
-sldrCount.active=True
+sldrCount=Slider(countVals,countPos,countID) #competitor count slider
+dictScreen[1][1].update({'sldrCount':sldrCount}) #add to Lobby screen index
 countHeight=int((sldrCount.pos[3]-sldrCount.pos[0][1])*2)
 countBottom=int(sldrCount.pos[0][1])
 yMod=countHeight+int(height/25)
 diffVals=[1,(1,3),dictDiff]
-diffs=[]
 for x in range(sldrCount.vals[1][1]):
 	diffPos=(width/18,countBottom+(yMod*(x+1)))
 	diffID='Comp '+str(x+1)+' Difficulty'
 	sldrDiff=Slider(diffVals,diffPos,diffID) #computer difficulty slider
-	sldrDiff.active=True if x<sldrCount.vals[0] else False
-	diffs.append(sldrDiff)
+	dictScreen[1][1].update({'sldrDiff'+str(x+1):sldrDiff}) #add to Lobby screen index
 
 #button creation
-ng=TextButton((0,0),'New Game') #new game
-cg=TextButton((0,0),'Continue Game') #continue game
-cg.active=False #set as false to begin with; set as true if save file exists
-btnWidth=int(ng.pos[2][0]+(width/50)+cg.pos[2][0])
-ng.pos[0]=int((width-btnWidth)/2) #change ng x coord
-cg.pos[0]=int(ng.pos[0]+(btnWidth-cg.pos[2][0])) #change cg x coord
-ng.pos[1]=cg.pos[1]=int(countBottom+(yMod*(sldrCount.vals[1][1]+1.75))) #change y coord
+tbNg=TextButton((0,0),'New Game') #new game
+dictScreen[1][1].update({'tbNg':tbNg}) #add to Lobby screen index
+tbCg=TextButton((0,0),'Continue Game') #continue game
+dictScreen[1][1].update({'tbCg':tbCg}) #add to Lobby screen index
+tbWidth=int(tbNg.pos[2][0]+(width/50)+tbCg.pos[2][0])
+tbNg.pos[0]=int((width-tbWidth)/2) #change ng x coord
+tbCg.pos[0]=int(tbNg.pos[0]+(tbWidth-tbCg.pos[2][0])) #change cg x coord
+tbNg.pos[1]=tbCg.pos[1]=int(countBottom+(yMod*(sldrCount.vals[1][1]+1.25))) #change y coord
 
 #checkbox creation
-newX=diffs[len(diffs)-1].pos[2]+(width/25)
-newY=lblTitle.pos[1]+(lblTitle.font[2]/2)+(height/20)
+diffRt=0
+objs=dictScreen[1][1]
+for obj in objs: #find max slider width
+	if 'sldrDiff' in obj:
+		diffRt=objs[obj].pos[2] if objs[obj].pos[2]>diffRt else diffRt
+newX=diffRt+(width/25) #use max slider width to determine x
+newY=lblPlayer.pos[1] #same y as lblPlayer
 lblRules=Label((newX,newY),white,'Gameplay Rules',mediumFont,False)
+dictScreen[1][1].update({'lblRules':lblRules}) #add to Lobby screen index
 newY=lblRules.pos[1]+(lblRules.font[2]/2)+(height/20)
 cbSlap=Checkbox((newX,newY),'Slaps?') #master checkbox
-cbSlap.active=True
+dictScreen[1][1].update({'cbSlap':cbSlap}) #add to Lobby screen index
 newX+=width/25
-yMod=smallFont.render(cbSlap.caption,1,white).get_height()
-rules=[]
+yMod=smallFont.render(cbSlap.caption,1,white).get_height()+int(height/50)
 for x in range(len(dictRules)):
 	newY+=yMod
 	cbRule=Checkbox((newX,newY),dictRules[x+1]) #individual rule checkbox
-	cbRule.active=False
-	rules.append(cbRule)
+	dictScreen[1][1].update({'cbRule'+str(x+1):cbRule}) #add to Lobby screen index
 #End Lobby screen items
 
-#Game Screen items
-playPause=PlayPause((17*width/20,height/20),width/11) #play/pause button
-
-def screenChange(screenNum):
-	screen.fill(black)
-	if screenNum==1: #game setting selection
-		lblTitle.draw() #game title
-		lblPlayer.draw() #player options label
-		oldY=lblTitle.pos[1]+(lblTitle.font[2]/5)+(height/20)
-		pygame.draw.line(screen,white,(width/18,oldY),(17*width/18,oldY),2)
-		sldrCount.draw() #competitor count slider
-		for diff in diffs:
-			diff.draw() #competitor difficulty sliders
-		newX=diffs[len(diffs)-1].pos[2]+(width/50)
-		diffHeight=int((diffs[len(diffs)-1].pos[3]-diffs[len(diffs)-1].pos[0][1])*2)
-		diffBottom=int(diffs[len(diffs)-1].pos[0][1])
-		yMod=diffHeight+int(height/33)
-		newY=diffBottom+yMod
-		pygame.draw.line(screen,white,(newX,oldY),(newX,newY),2)
-		lblRules.draw() #rules label
-		cbSlap.draw()
-		for rule in rules:
-			rule.draw() #rules checkboxes
-		ng.draw() #new game button
-		cg.draw() #continue game button
-
-	elif screenNum==2: #actual game
-		#render order (comment placeholders)
-		playPause.draw() #play/pause button
-		#playerOrbit (invisible ellipse to guide player "hands")
-		#for person in player:
-			#cardBack.jpg
-			#player name
-			#number of cards
-		#last played card (displayed larger than player hands, centered)
-		#list of events
-		placeholder=largeFont.render('Under Construction',1,orange)
-		position=placeholder.get_rect(center=(width/2,height/2))
-		screen.blit(placeholder,position)
-	pygame.display.update()
-	return scrName #update scrName for more accurate reference
-#END GUI FUNCTIONS
+#Game screen
+dictScreen.update({2:[False,{}]}) #prep index of Game screen items; initially hidden
+pbGame=PlayPause((17*width/20,height/20),width/11) #play/pause button
+dictScreen[2][1].update({'pbGame':pbGame}) #add to Game screen index
+#END OBJECT RENDER DEFINITIONS
 
 #BEGIN GAMEPLAY FUNCTIONS
-def rearrange(listInput, index):
+def screenChange(screenNum): #draws game screen; screenNum as int
+	screen.fill(black)
+	items=['sldr','cb','tb','pb']
+	for list in dictScreen:
+		dict=dictScreen[list][1]
+		if list==screenNum:
+			dictScreen[list][0]=True
+			for entry in dict:
+				if 'lbl' not in entry and entry.isalpha():
+					dict[entry].active=True
+					parentCheck(entry) #update any dependent objects
+		else:
+			dictScreen[list][0]=False
+			for entry in dict:
+				for item in items:
+					if item in entry: dict[entry].active=False
+	for obj in dictScreen[screenNum][1]:
+		dictScreen[screenNum][1][obj].draw() #draw each visible object
+	pygame.display.update()
+
+def areaClick(obj): #returns whether object was clicked; obj as str
+	global mouseX,mouseY
+	x1=x2=y1=y2=0
+	for list in dictScreen:
+		if dictScreen[list][0]:
+			dict=dictScreen[list][1]
+			if 'sldr' in obj:
+				x1,x2=dict[obj].pos[0][0],dict[obj].pos[2]
+				y1,y2=dict[obj].pos[3]-15,dict[obj].pos[3]+15
+			elif 'cb' in obj:
+				x1,x2=dict[obj].pos[0],dict[obj].pos[0]+dict[obj].pos[2]
+				y1,y2=dict[obj].pos[1],dict[obj].pos[1]+dict[obj].pos[3]
+			elif 'tb' in obj:
+				x1,x2=dict[obj].pos[0],dict[obj].pos[0]+dict[obj].pos[2][0]
+				y1,y2=dict[obj].pos[1],dict[obj].pos[1]+dict[obj].pos[2][1]
+			elif 'pb' in obj:
+				x1,x2=dict[obj].pos[0],dict[obj].pos[0]+dict[obj].size
+				y1,y2=dict[obj].pos[1],dict[obj].pos[1]+dict[obj].size
+	area=(x1<mouseX<x2 and y1<mouseY<y2) if x1!=0 else False
+	return area
+
+def parentCheck(obj): #redraws any dependent objects; obj as str
+	global slaps
+	for list in dictScreen:
+		if dictScreen[list][0]:
+			dict=dictScreen[list][1]
+			if 'sldr' in obj:
+				for diff in dict:
+					if 'sldrDiff' in diff:
+						dict[diff].active=True if \
+						int(diff.split('sldrDiff')[1])<=\
+						dict[obj].vals[0] else False
+						dict[diff].draw()
+			elif 'cb' in obj:
+				for rule in dict:
+					if 'cb' in rule and not rule.isalpha():
+						dict[rule].active=True if dict[obj].val \
+						else False
+						dict[rule].draw()
+			elif 'tb' in obj:
+				dict[obj].active=True if len(slaps)>0 or obj=='tbNg' else False
+
+def rearrange(listInput,index):
 	listInput.append(listInput[index])
 	listInput.pop(index)
 
-def playCard(playerIndex, handIndex):
+def playCard(playerIndex,handIndex):
 	hand.append(player[playerIndex][2][0])
 	history.append([])
 	history[handIndex].append([player[playerIndex][0],[hand[len(hand)-1][0],hand[len(hand)-1][1]]])
-	print('\n' + player[playerIndex][0] + ' played the ' + hand[len(hand)-1][0] + ' of ' + hand[len(hand)-1][1])
+	print('\n'+player[playerIndex][0]+' played the '+hand[len(hand)-1][0]+' of '+hand[len(hand)-1][1])
 	player[playerIndex][2].pop(0)
 	player[playerIndex][1]=len(player[playerIndex][2])
 
@@ -376,20 +411,20 @@ def playCard(playerIndex, handIndex):
 		removePlayer(playerIndex)
 
 	if len(player)==1: #if there is only one player left
-		print('\nCongratulations, ' + player[0][0] + '! You won the game!')
+		print('\nCongratulations, '+player[0][0]+'! You won the game!')
 		print('Goodbye!')
 		pprint.pprint(history)
 		sys.exit()
 
 def chooseNext():
 	global person
-	if person + 1 >= len(player):
+	if person+1>=len(player):
 		person=0
 	else:
 		person+=1
 
 def removePlayer(playerIndex):
-	print('\nSorry, ' + player[playerIndex][0] + ', you\'re out of cards! Goodbye!')
+	print('\nSorry, '+player[playerIndex][0]+', you\'re out of cards! Goodbye!')
 	player.pop(playerIndex)
 #END GAMEPLAY FUNCTIONS
 
@@ -405,11 +440,11 @@ for x in range(random.randrange(5,11)): #shuffle cards
 		rearrange(deck,random.randrange(0,len(deck)))
 
 screen.fill(black)
-scrName='Lobby'
 screenChange(1)
 clicked=scrolling=False
 
-while 1: #begin game code
+#BEGIN GAME CODE
+while 1:
 	(mouseX,mouseY)=pygame.mouse.get_pos()
 	for event in pygame.event.get():
 		if event.type==pygame.QUIT:
@@ -417,41 +452,15 @@ while 1: #begin game code
 		elif event.type==pygame.MOUSEBUTTONDOWN and event.button==1:
 			clicked=True
 		if clicked:
-			if scrName='Lobby': #all clickable objects on Lobby screen
-				if sldrCount.pos[0][0]<mouseX<sldrCount.pos[2] \
-				and sldrCount.pos[3]-15<mouseY<sldrCount.pos[3]+15:
-					sldrCount.click() #update master slider
-					for ind,diff in enumerate(diffs):
-						diff.active=True if ind<sldrCount.vals[0] else False
-						diff.draw() #activate indicated sliders, update all
-				for diff in diffs:
-					if diff.active \
-					and diff.pos[0][0]<mouseX<diff.pos[2] \
-					and diff.pos[3]-15<mouseY<diff.pos[3]+15:
-						diff.click() #update individual sliders
-				if cbSlap.pos[0]<mouseX<cbSlap.pos[0]+cbSlap.pos[2] \
-				and cbSlap.pos[1]<mouseY<cbSlap.pos[1]+cbSlap.pos[3]:
-					cbSlap.click() #update master checkbox
-					for rule in rules:
-						rule.active=True if cbSlap.val else False
-						rule.draw() #update all checkboxes
-				for rule in rules:
-					if rule.active \
-					and rule.pos[0]<mouseX<rule.pos[0]+rule.pos[2] \
-					and rule.pos[1]<mouseY<rule.pos[1]+rule.pos[3]:
-						rule.click() #update individual checkboxes
-				if ng.pos[0]<mouseX<ng.pos[0]+ng.pos[2][0] \
-				and ng.pos[1]<mouseY<ng.pos[1]+ng.pos[2][1]:
-					ng.click()
-				if cg.active \
-				and cg.pos[0]<mouseX<cg.pos[0]+cg.pos[2][0] \
-				and cg.pos[1]<mouseY<cg.pos[1]+cg.pos[2][1]:
-					cg.click()
-			elif scrName=='Game': #all clickable objects on Game screen
-				if playPause.pos[0]<mouseX<playPause.pos[0]+playPause.size \
-				and playPause.pos[1]<mouseY<playPause.pos[1]+playPause.size:
-					print('update playPause')
-					playPause.click()
+			for list in dictScreen:
+				if dictScreen[list][0]:
+					dict=dictScreen[list][1]
+					for obj in dict:
+						if areaClick(obj) and dict[obj].active:
+							dict[obj].click()
+						if 'lbl' not in obj and 'pb' not in obj \
+						and obj.isalpha():
+							parentCheck(obj)
 			clicked=False
 	#PRESERVE GAMEPLAY CODE BELOW
 	"""
@@ -582,3 +591,4 @@ while 1: #begin game code
 								handOver=True
 						played+=1
 	"""
+#END GAME CODE
