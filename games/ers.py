@@ -37,14 +37,14 @@ smallFont=pygame.font.Font(None,20)
 tinyFont=pygame.font.Font(None,14)
 
 #OBJECT TRACKING DICTIONARY
-dictScreen = {}
+dictScreen = {} #as {key(int):[visible(boolean),[object ID,object]]}
 
 #RULE TRACKING LIST
 slaps=[]
 
 #BEGIN GUI CLASSES
 class Slider:
-	global screen, width, height, mouseX, mouseY
+	global screen, width, height, mousePos
 	def __init__(self,vals=[1,(1,2),{1:1,2:2}],pos=(0,0),id='Default'):
 		self.vals=vals #output as int, val range as (min=int,max=int), output list as dict
 		#NOTE!!! output list dictionary must have integers as keys
@@ -64,13 +64,13 @@ class Slider:
 		leftEnd=int(x+maxLen.get_width()+(width/50)) #length of the longest item
 		rightEnd=int(leftEnd+(width/6))
 		sldrHt=int(y+(maxLen.get_height()/2))
-		self.pos=[pos,leftEnd,rightEnd,sldrHt] #where the slider line goes
+		self.pos=[pos,leftEnd,rightEnd,sldrHt] #slider positional values
 		self.points=[]
 		for x in range(max-min+1):
 			xMod=int(x*(rightEnd-leftEnd)/(max-min))
 			ptPos=(leftEnd+xMod,sldrHt)
 			ptVals=[lgrey,ptPos,3] if x+min != vals[0] else [green,ptPos,4]
-			self.points.append(ptVals) #where the slider value indicators go
+			self.points.append(ptVals) #slider value indicators positions/colors
 
 	def draw(self):
 		color=white if self.active else dgrey
@@ -88,6 +88,7 @@ class Slider:
 	def click(self):
 		area=int(self.points[1][1][0]-self.pos[1])/2
 		min=self.vals[1][0]
+		(mouseX,mouseY)=mousePos
 		for x in range(len(self.points)): #compare mouse position to interactive areas
 			(self.points[x][0],self.points[x][2])=(lgrey,3) #reset to lgrey
 			if mouseX>self.pos[1] and mouseX<self.pos[1]+area:
@@ -101,8 +102,9 @@ class Slider:
 		self.id=self.id.split(':')[0]+': '+str(self.vals[2].get(val)) #update slider caption
 		self.draw() #redraw slider to reflect changes
 
-	def hover(self) :#implement later
+	def hover(self):#implement later
 		#add tooltip dictionary, search by object type, id/caption value
+		(mouseX,mouseY)=mousePos
 		if 'Competitor' in self.id:
 			text='Number of opposing players'
 		elif 'Difficulty' in self.id:
@@ -134,7 +136,6 @@ class Label:
 		pos=ctrPos if self.centered else self.pos
 		screen.blit(self.font[1],pos)
 		pygame.display.update(lblRect)
-
 
 class TextButton:
 	global screen, width, height
@@ -187,18 +188,17 @@ class PlayPause: #draw menu screen icon
 		(x,y,z)=(self.pos[0],self.pos[1],self.size)
 		bounds=(x,y,z,z)
 		if self.paused: #play icon
-			pygame.draw.rect(screen,green,bounds)
+			pygame.draw.rect(screen,green,bounds) #background
 			pointList=[]
-			pointList.append((x+(z/4),y+(z/4)))
-			pointList.append((x+(3*z/4),y+(z/2)))
-			pointList.append((x+(z/4),y+(3*z/4)))
+			pointList.append((x+(z/4),y+(z/4))) #top point
+			pointList.append((x+(3*z/4),y+(z/2))) #far right point
+			pointList.append((x+(z/4),y+(3*z/4))) #bottom point
 			pygame.draw.polygon(screen,white,pointList)
 		else: #pause icon
-			pygame.draw.rect(screen,red,bounds)
-			v=z/7
-			w=z/6
-			rect1=(x+(1*v),y+w,2*v,4*w)
-			rect2=(x+(4*v),y+w,2*v,4*w)
+			pygame.draw.rect(screen,red,bounds) #background
+			v,w=z/7,z/6
+			rect1=(x+(1*v),y+w,2*v,4*w) #left rect
+			rect2=(x+(4*v),y+w,2*v,4*w) #right rect
 			pygame.draw.rect(screen,white,rect1)
 			pygame.draw.rect(screen,white,rect2)
 		pygame.display.update(bounds)
@@ -236,10 +236,10 @@ class Checkbox:
 		cbText=smallFont.render(self.caption,1,color)
 		pygame.draw.rect(screen,black,self.pos) #set blank background rect
 		pygame.draw.rect(screen,color,(x,y+(h/4),(h/2),(h/2)),1) #checkbox
-		if self.val:
+		if self.val: #if true, check box
 			pointList=[(x,y+(h/4)),(x+(h/4),y+(h/2)),(x+(h/2),y)]
-			pygame.draw.lines(screen,color,False,pointList,2) #if true, check box
-		(x,y)=(x+h,y)
+			pygame.draw.lines(screen,color,False,pointList,2) #checkmark!!!
+		x+=h
 		screen.blit(cbText,(x,y)) #caption
 		pygame.display.update(self.pos)
 
@@ -353,25 +353,30 @@ def screenChange(screenNum): #draws game screen; screenNum as int
 		dictScreen[screenNum][1][obj].draw() #draw each visible object
 	pygame.display.update()
 
-def areaClick(obj): #returns whether object was clicked; obj as str
-	global mouseX,mouseY
+def areaClick(pos): #returns dictScreen key of clicked object; pos as (x,y)
+	global mousePos
 	x1=x2=y1=y2=0
+	(mouseX,mouseY)=mousePos
 	for list in dictScreen:
 		if dictScreen[list][0]:
 			dict=dictScreen[list][1]
-			if 'sldr' in obj:
-				x1,x2=dict[obj].pos[0][0],dict[obj].pos[2]
-				y1,y2=dict[obj].pos[3]-15,dict[obj].pos[3]+15
-			elif 'cb' in obj:
-				x1,x2=dict[obj].pos[0],dict[obj].pos[0]+dict[obj].pos[2]
-				y1,y2=dict[obj].pos[1],dict[obj].pos[1]+dict[obj].pos[3]
-			elif 'tb' in obj:
-				x1,x2=dict[obj].pos[0],dict[obj].pos[0]+dict[obj].pos[2][0]
-				y1,y2=dict[obj].pos[1],dict[obj].pos[1]+dict[obj].pos[2][1]
-			elif 'pb' in obj:
-				x1,x2=dict[obj].pos[0],dict[obj].pos[0]+dict[obj].size
-				y1,y2=dict[obj].pos[1],dict[obj].pos[1]+dict[obj].size
-	area=(x1<mouseX<x2 and y1<mouseY<y2) if x1!=0 else False
+			for obj in dict: #check if active area was clicked
+				if 'sldr' in obj: #slider
+					x1,x2=dict[obj].pos[0][0],dict[obj].pos[2]
+					y1,y2=dict[obj].pos[3]-15,dict[obj].pos[3]+15
+				elif 'cb' in obj: #checkbox
+					x1,x2=dict[obj].pos[0],dict[obj].pos[0]+dict[obj].pos[2]
+					y1,y2=dict[obj].pos[1],dict[obj].pos[1]+dict[obj].pos[3]
+				elif 'tb' in obj: #textbox
+					x1,x2=dict[obj].pos[0],dict[obj].pos[0]+dict[obj].pos[2][0]
+					y1,y2=dict[obj].pos[1],dict[obj].pos[1]+dict[obj].pos[2][1]
+				elif 'pb' in obj: #playpause
+					x1,x2=dict[obj].pos[0],dict[obj].pos[0]+dict[obj].size
+					y1,y2=dict[obj].pos[1],dict[obj].pos[1]+dict[obj].size
+				else:
+					continue
+				area=obj if (x1<mouseX<x2 and y1<mouseY<y2) else ''
+				if area!='': break
 	return area
 
 def parentCheck(obj): #redraws any dependent objects; obj as str
@@ -379,21 +384,23 @@ def parentCheck(obj): #redraws any dependent objects; obj as str
 	for list in dictScreen:
 		if dictScreen[list][0]:
 			dict=dictScreen[list][1]
-			if 'sldr' in obj:
-				for diff in dict:
-					if 'sldrDiff' in diff:
-						dict[diff].active=True if \
-						int(diff.split('sldrDiff')[1])<=\
-						dict[obj].vals[0] else False
-						dict[diff].draw()
-			elif 'cb' in obj:
-				for rule in dict:
-					if 'cb' in rule and not rule.isalpha():
-						dict[rule].active=True if dict[obj].val \
-						else False
-						dict[rule].draw()
-			elif 'tb' in obj:
-				dict[obj].active=True if len(slaps)>0 or obj=='tbNg' else False
+			item=dict.get(obj, '')
+			if item!='':
+				if 'sldr' in obj:
+					for diff in dict:
+						if 'sldrDiff' in diff:
+							dict[diff].active=True if \
+							int(diff.split('sldrDiff')[1])<=\
+							dict[obj].vals[0] else False
+							dict[diff].draw()
+				elif 'cb' in obj:
+					for rule in dict:
+						if 'cb' in rule and not rule.isalpha():
+							dict[rule].active=True if dict[obj].val \
+							else False
+							dict[rule].draw()
+				elif 'tb' in obj:
+					dict[obj].active=True if len(slaps)>0 or obj=='tbNg' else False
 
 def rearrange(listInput,index):
 	listInput.append(listInput[index])
@@ -445,7 +452,7 @@ clicked=scrolling=False
 
 #BEGIN GAME CODE
 while 1:
-	(mouseX,mouseY)=pygame.mouse.get_pos()
+	mousePos=pygame.mouse.get_pos()
 	for event in pygame.event.get():
 		if event.type==pygame.QUIT:
 			sys.exit()
@@ -455,8 +462,9 @@ while 1:
 			for list in dictScreen:
 				if dictScreen[list][0]:
 					dict=dictScreen[list][1]
-					for obj in dict:
-						if areaClick(obj) and dict[obj].active:
+					if areaClick(mousePos)!='':
+						obj=areaClick(mousePos)
+						if dict[obj].active:
 							dict[obj].click()
 						if 'lbl' not in obj and 'pb' not in obj \
 						and obj.isalpha():
@@ -473,7 +481,7 @@ while 1:
 	while hChosen==False: #how many human players? (1-6)
 		checkInvalid()
 		human=str(input('\nHow many human players will there be? '))
-		if human.isdigit()==False or int(human)<1 or int(human)>6: #if input has letters or is too small or large
+		if human.isdigit()==False or 1>int(human)>6: #if input size/chartype is wrong
 			printInvalid('Please enter a digit between 1 and 6.')
 		else:
 			human=int(human)
@@ -487,7 +495,7 @@ while 1:
 		checkInvalid()
 		computer=str(input('\nHow many computer players will there be? '))
 		cLevel=[]
-		if computer.isdigit()==False or int(computer)<0 or int(computer)>6-human: #if input has letters or is too small or large
+		if computer.isdigit()==False or 0>int(computer)>6-human: #if input size/chartype is wrong
 			printInvalid('Please enter a digit between 0 and ' + str(6-human) + '.')
 		elif human + int(computer)==1: #if there is only one human player
 			printInvalid('Please enter a digit between 1 and ' + str(6-human) + '.')
@@ -496,7 +504,7 @@ while 1:
 			if computer != 0: #choose computer player difficulty (slap likelihood, speed in seconds)
 				for x in range(computer):
 					level=str(input('\nChoose Computer ' + str(x+1) + ' difficulty (1=Easy, 2=Medium, 3=Hard): '))
-					if level.isdigit()==False or int(level)<1 or int(level)>3: #if input has letters or is too small or large
+					if level.isdigit()==False or 1>int(level)>3: #if input size/chartype is wrong
 						printInvalid('Please enter a digit between 1 and 3.')
 					else:
 						if int(level)==1: #1.5 to 2 seconds, 66% chance to slap
