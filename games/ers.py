@@ -1,11 +1,10 @@
 """
 Egyptian War!
 v 2.0 - straight card play, single player, pygame gui
-!!!make playPause button switch back to Lobby screen
-!!!fix KeyErrors on TextButtons
+!!!add save file creation/modification/load capability
 """
 
-import sys,random,pprint,pygame
+import sys,random,pprint,pygame,pdb
 from datetime import datetime
 
 #INITIALIZE PYGAME
@@ -45,14 +44,15 @@ slaps=[]
 #BEGIN GUI CLASSES
 class Slider:
 	global screen, width, height, mousePos
-	def __init__(self,vals=[1,(1,2),{1:1,2:2}],pos=(0,0),id='Default'):
+	def __init__(self,id,vals=[1,(1,2),{1:1,2:2}],pos=(0,0),caption='Default'):
+		self.id=id
 		self.vals=vals #output as int, val range as (min=int,max=int), output list as dict
 		#NOTE!!! output list dictionary must have integers as keys
 		(min,max)=self.vals[1]
-		self.id=id+': '+str(self.vals[2].get(self.vals[0])) #caption
+		self.caption=caption+': '+str(self.vals[2].get(self.vals[0])) #caption
 		self.active=True #as boolean; allow/disallow user interactivity
 		color=white if self.active else dgrey
-		caption=smallFont.render(self.id,1,color)
+		#caption=smallFont.render(self.caption,1,color)
 		key=maxLen=0
 		for item in vals[2]: #find longest possible output
 			if len(str(vals[2][item]))>maxLen:
@@ -60,7 +60,7 @@ class Slider:
 			else:
 				key,maxLen=key,maxLen
 		(x,y)=(int(pos[0]),int(pos[1]))
-		maxLen=smallFont.render(id+': '+str(vals[2][key]),1,color)
+		maxLen=smallFont.render(caption+': '+str(vals[2][key]),1,color)
 		leftEnd=int(x+maxLen.get_width()+(width/50)) #length of the longest item
 		rightEnd=int(leftEnd+(width/6))
 		sldrHt=int(y+(maxLen.get_height()/2))
@@ -74,7 +74,7 @@ class Slider:
 
 	def draw(self):
 		color=white if self.active else dgrey
-		caption=smallFont.render(self.id,1,color)
+		caption=smallFont.render(self.caption,1,color)
 		(x,y)=self.pos[0]
 		(w,h)=(self.pos[2]-self.pos[0][0]+int(width/50),caption.get_height())
 		pygame.draw.rect(screen,black,(x,y,w,h)) #set blank background rect
@@ -99,15 +99,15 @@ class Slider:
 					self.vals[0]=x+min #any value between min and max
 		val=self.vals[0]
 		(self.points[val-min][0],self.points[val-min][2])=(green,4) #value circle: green
-		self.id=self.id.split(':')[0]+': '+str(self.vals[2].get(val)) #update slider caption
+		self.caption=self.caption.split(':')[0]+': '+str(self.vals[2].get(val)) #update slider caption
 		self.draw() #redraw slider to reflect changes
 
 	def hover(self):#implement later
 		#add tooltip dictionary, search by object type, id/caption value
 		(mouseX,mouseY)=mousePos
-		if 'Competitor' in self.id:
+		if 'Competitor' in self.caption:
 			text='Number of opposing players'
-		elif 'Difficulty' in self.id:
+		elif 'Difficulty' in self.caption:
 			text='corresponding computer difficulty' #change
 		else:
 			text='Default ToolTip'
@@ -139,24 +139,26 @@ class Label:
 
 class TextButton:
 	global screen, width, height
-	def __init__(self,pos,caption='Default'):
+	def __init__(self,id,pos,font,caption='Default'):
+		self.id=id
 		self.caption=caption #as string
+		self.font=font
 		(x,y)=pos #as (x,y)
-		captionText=mediumFont.render(caption,1,white)
+		captionText=font.render(caption,1,black)
 		(w,h)=(captionText.get_width()+15,captionText.get_height()+15)
 		self.pos=[x,y,(w,h)] #list form so x and y can change as needed
 		self.active=True #as boolean; default=True
 
 	def draw(self):
 		(x,y,(w,h))=self.pos
-		captionText=mediumFont.render(self.caption,1,white)
+		captionText=self.font.render(self.caption,1,black)
 		captionPos=captionText.get_rect(center=(x+(w/2),y+(h/2)))
 		color=lgrey if self.active else dgrey
 		pygame.draw.rect(screen,color,(x,y,w,h))
 		screen.blit(captionText,captionPos)
 
 	def click(self):
-		if self.caption=='New Game':
+		if self.id=='tbNg':
 			#set up new game using player inputs
 			#look for save file in relevant directory
 			#if none exists, create one
@@ -166,19 +168,53 @@ class TextButton:
 			#add rule to save file
 			#add rule to gameplay dictionary
 			print('start new game')
-		elif self.caption=='Continue Game':
+			screenChange(2)
+		elif self.id=='tbCg':
 			#set up game using save file
 			#open save file
 			#for rule in rules:
 			#if rule[1]:
 			#add rule to gameplay dictionary
 			print('continue saved game')
-		#confirm button selection choice
-		screenChange(2) #change to game screen
+			screenChange(2)
+		elif 'DB' in self.id:
+			if self.caption=='Yes':
+				screenChange(1)
+			elif self.caption=='No':
+				screenChange(2)
+
+class Checkbox:
+	global screen, width, height
+	def __init__(self,id,pos,caption):
+		self.id=id
+		self.caption=caption #as string
+		h=smallFont.render(caption,1,white).get_height()
+		w=smallFont.render(caption,1,white).get_width()+h
+		self.pos=(pos[0],pos[1],w,h) #pos as (x,y)
+		self.val=False #as boolean; default False
+		self.active=False #as boolean; default False
+
+	def draw(self):
+		(x,y,w,h)=self.pos
+		color=white if self.active else dgrey
+		cbText=smallFont.render(self.caption,1,color)
+		pygame.draw.rect(screen,black,self.pos) #set blank background rect
+		pygame.draw.rect(screen,color,(x,y+(h/4),(h/2),(h/2)),1) #checkbox
+		if self.val: #if true, check box
+			pointList=[(x,y+(h/4)),(x+(h/4),y+(h/2)),(x+(h/2),y)]
+			pygame.draw.lines(screen,color,False,pointList,2) #checkmark!!!
+		x+=h
+		screen.blit(cbText,(x,y)) #caption
+		pygame.display.update(self.pos)
+
+	def click(self):
+		self.val=not self.val #toggle value
+		self.draw()
 
 class PlayPause: #draw menu screen icon
-	global screen, width, height
-	def __init__(self,pos,size):
+	global screen,width,height,mousePos
+	def __init__(self,id,pos,size):
+		self.id=id
 		self.pos=pos #as (x,y)
 		self.size=size #as int (because square)
 		self.paused=False #as boolean; default "Pause"; pause icon shows
@@ -205,47 +241,60 @@ class PlayPause: #draw menu screen icon
 
 	def click(self):
 		if self.paused:
-			print('play game') #placeholder
+			print('3\n2\n1\nrestart game') #placeholder
+			#countdown to game restart (3,2,1)
 		else:
+			pdb.set_trace()
 			print('pause game')
-			#open dialog box
-			#START DIALOG BOX CODE
-			#return to lobby? yes no
-			#if yes, return to lobby
-				#screenChange(1) #lobby
-			#if no, close dialog box
-				#self.mode="Play"
-			#END DIALOG BOX CODE
+			for list in dictScreen:
+				if dictScreen[list][0]:
+					dict=dictScreen[list][1]
+			msg='Exit to lobby?'
+			opts=['Yes','No']
+			dbPause=DialogBox('Pause',msg,opts)
+			dict.update({'Pause':dbPause})
+			dbPause.draw() #open dialog box
+			pygame.display.update()
+			chosen=clicked=False
+			while not chosen:
+				if event.type==pygame.MOUSEBUTTONDOWN and event.button==1:
+					clicked=True
+				if clicked and areaClick(mousePos)!='':
+					dict[areaClick(mousePos)].click()
+					chosen=True
 		self.paused=not self.paused #toggle
 		self.draw()
-		screenChange(1) #change to lobby screen
 
-class Checkbox:
-	global screen, width, height
-	def __init__(self,pos,caption):
-		self.caption=caption #as string
-		h=smallFont.render(caption,1,white).get_height()
-		w=smallFont.render(caption,1,white).get_width()+h
-		self.pos=(pos[0],pos[1],w,h) #pos as (x,y)
-		self.val=False #as boolean; default False
-		self.active=False #as boolean; default False
+class DialogBox:
+	global screen,width,height
+	def __init__(self,id,msg,opts=['Yes','No']):
+		self.id=id #as string; use to differentiate between boxes on same screen
+		self.msg=msg #msg as string
+		self.opts=opts #opts as list of button captions; 2 max
 
 	def draw(self):
-		(x,y,w,h)=self.pos
-		color=white if self.active else dgrey
-		cbText=smallFont.render(self.caption,1,color)
-		pygame.draw.rect(screen,black,self.pos) #set blank background rect
-		pygame.draw.rect(screen,color,(x,y+(h/4),(h/2),(h/2)),1) #checkbox
-		if self.val: #if true, check box
-			pointList=[(x,y+(h/4)),(x+(h/4),y+(h/2)),(x+(h/2),y)]
-			pygame.draw.lines(screen,color,False,pointList,2) #checkmark!!!
-		x+=h
-		screen.blit(cbText,(x,y)) #caption
-		pygame.display.update(self.pos)
-
-	def click(self):
-		self.val=not self.val #toggle value
-		self.draw()
+		for list in dictScreen:
+			if dictScreen[list][0]:
+				active=list #find active screen
+		msg=smallFont.render(self.msg,1,black) #display message
+		msgW,msgH=msg.get_width(),msg.get_height()
+		msgX=(width-msg.get_width())/2
+		msgY=(height-msg.get_height())/2
+		optCount=tbDBwidth=0
+		for opt in self.opts:
+			optCount+=1
+			tbDB=TextButton('tbDB'+self.id+str(optCount),(0,0),smallFont,opt)
+			dictScreen[active][1].update({tbDB.id:tbDB})#option buttons
+			tbDBwidth+=tbDB.pos[2][0]
+		tbDBwidth+=(width/50)*len(self.opts)
+		dbRect=(msgX-15,msgY-15,msgW+30,msgY+tbDB.pos[2][1]) #light grey background rect
+		pygame.draw.rect(screen,lgrey,(dbRect))
+		screen.blit(msg,(msgX,msgY))
+		tbDB1=dictScreen[active][1]['tbDB'+self.id+'1']
+		tbDB2=dictScreen[active][1]['tbDB'+self.id+'2']
+		tbDB1.pos[0]=int((width-tbDBwidth)/2) #change tbDB1 x coord
+		tbDB2.pos[0]=int(tbDB1.pos[0]+(tbDBwidth-tbDB2.pos[2][0])) #change tbDb2 x coord
+		tbDB1.pos[1]=tbDB2.pos[1]=int(msgY+(msgH*2.25)) #change y coord
 #END GUI CLASSES
 
 #BEGIN OBJECT RENDER DEFINITIONS
@@ -283,8 +332,8 @@ newY=lblPlayer.pos[1]+lblPlayer.font[2]+(height/25)
 countVals=[2,(2,5),dictCount]
 countPos=(width/18,newY)
 countID='Competitors'
-sldrCount=Slider(countVals,countPos,countID) #competitor count slider
-dictScreen[1][1].update({'sldrCount':sldrCount}) #add to Lobby screen index
+sldrCount=Slider('sldrCount',countVals,countPos,countID) #competitor count slider
+dictScreen[1][1].update({sldrCount.id:sldrCount}) #add to Lobby screen index
 countHeight=int((sldrCount.pos[3]-sldrCount.pos[0][1])*2)
 countBottom=int(sldrCount.pos[0][1])
 yMod=countHeight+int(height/25)
@@ -292,14 +341,14 @@ diffVals=[1,(1,3),dictDiff]
 for x in range(sldrCount.vals[1][1]):
 	diffPos=(width/18,countBottom+(yMod*(x+1)))
 	diffID='Comp '+str(x+1)+' Difficulty'
-	sldrDiff=Slider(diffVals,diffPos,diffID) #computer difficulty slider
-	dictScreen[1][1].update({'sldrDiff'+str(x+1):sldrDiff}) #add to Lobby screen index
+	sldrDiff=Slider('sldrDiff'+str(x+1),diffVals,diffPos,diffID) #computer difficulty slider
+	dictScreen[1][1].update({sldrDiff.id:sldrDiff}) #add to Lobby screen index
 
 #button creation
-tbNg=TextButton((0,0),'New Game') #new game
-dictScreen[1][1].update({'tbNg':tbNg}) #add to Lobby screen index
-tbCg=TextButton((0,0),'Continue Game') #continue game
-dictScreen[1][1].update({'tbCg':tbCg}) #add to Lobby screen index
+tbNg=TextButton('tbNg',(0,0),mediumFont,'New Game') #new game
+dictScreen[1][1].update({tbNg.id:tbNg}) #add to Lobby screen index
+tbCg=TextButton('tbCg',(0,0),mediumFont,'Continue Game') #continue game
+dictScreen[1][1].update({tbCg.id:tbCg}) #add to Lobby screen index
 tbWidth=int(tbNg.pos[2][0]+(width/50)+tbCg.pos[2][0])
 tbNg.pos[0]=int((width-tbWidth)/2) #change ng x coord
 tbCg.pos[0]=int(tbNg.pos[0]+(tbWidth-tbCg.pos[2][0])) #change cg x coord
@@ -316,20 +365,20 @@ newY=lblPlayer.pos[1] #same y as lblPlayer
 lblRules=Label((newX,newY),white,'Gameplay Rules',mediumFont,False)
 dictScreen[1][1].update({'lblRules':lblRules}) #add to Lobby screen index
 newY=lblRules.pos[1]+(lblRules.font[2]/2)+(height/20)
-cbSlap=Checkbox((newX,newY),'Slaps?') #master checkbox
-dictScreen[1][1].update({'cbSlap':cbSlap}) #add to Lobby screen index
+cbSlap=Checkbox('cbSlap',(newX,newY),'Slaps?') #master checkbox
+dictScreen[1][1].update({cbSlap.id:cbSlap}) #add to Lobby screen index
 newX+=width/25
 yMod=smallFont.render(cbSlap.caption,1,white).get_height()+int(height/50)
 for x in range(len(dictRules)):
 	newY+=yMod
-	cbRule=Checkbox((newX,newY),dictRules[x+1]) #individual rule checkbox
-	dictScreen[1][1].update({'cbRule'+str(x+1):cbRule}) #add to Lobby screen index
+	cbRule=Checkbox('cbRule'+str(x+1),(newX,newY),dictRules[x+1]) #individual rule checkbox
+	dictScreen[1][1].update({cbRule.id:cbRule}) #add to Lobby screen index
 #End Lobby screen items
 
 #Game screen
 dictScreen.update({2:[False,{}]}) #prep index of Game screen items; initially hidden
-pbGame=PlayPause((17*width/20,height/20),width/11) #play/pause button
-dictScreen[2][1].update({'pbGame':pbGame}) #add to Game screen index
+pbGame=PlayPause('pbGame',(17*width/20,height/20),width/11) #play/pause button
+dictScreen[2][1].update({pbGame.id:pbGame}) #add to Game screen index
 #END OBJECT RENDER DEFINITIONS
 
 #BEGIN GAMEPLAY FUNCTIONS
