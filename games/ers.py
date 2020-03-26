@@ -35,15 +35,34 @@ mediumFont=pygame.font.Font(None,28)
 smallFont=pygame.font.Font(None,20)
 tinyFont=pygame.font.Font(None,14)
 
-#OBJECT TRACKING DICTIONARY
-dictScreen = {} #as {key(int):[visible(boolean),[object ID,object]]}
-
-#RULE TRACKING LIST
-slaps=[]
+#ITEM TRACKERS
+dictScreen={} #screen tracker as {key:[visible,{object ID,object}}
+listComps=[] #competitor tracker as [(competitor,difficulty),...]
+listSlaps=[] #rule tracker as [rule,...]
+dictHands={} #hand tracker as {competitor:[(order,active),[card,...]]}
 
 #BEGIN GUI CLASSES
+class Label:
+	global screen,width,height
+	def __init__(self,pos,color,text,font,centered=False):
+		self.pos=pos #as (x,y)
+		self.color=color #as (r,g,b)
+		self.text=text #as string
+		caption=font.render(text,1,color)
+		height=caption.get_height()
+		self.font=(font,caption,height) #as font
+		self.centered=centered #as boolean
+	def draw(self):
+		w=self.font[1].get_width()+15
+		h=self.font[1].get_height()+15
+		lblRect = (self.pos[0],self.pos[1],w,h)
+		ctrPos=self.font[1].get_rect(center=(self.pos))
+		pos=ctrPos if self.centered else self.pos
+		screen.blit(self.font[1],pos)
+		pygame.display.update(lblRect)
+
 class Slider:
-	global screen, width, height, mousePos
+	global screen,width,height,mousePos
 	def __init__(self,id,vals=[1,(1,2),{1:1,2:2}],pos=(0,0),caption='Default'):
 		self.id=id
 		self.vals=vals #output as int, val range as (min=int,max=int), output list as dict
@@ -51,8 +70,6 @@ class Slider:
 		(min,max)=self.vals[1]
 		self.caption=caption+': '+str(self.vals[2].get(self.vals[0])) #caption
 		self.active=True #as boolean; allow/disallow user interactivity
-		color=white if self.active else dgrey
-		#caption=smallFont.render(self.caption,1,color)
 		key=maxLen=0
 		for item in vals[2]: #find longest possible output
 			if len(str(vals[2][item]))>maxLen:
@@ -71,7 +88,6 @@ class Slider:
 			ptPos=(leftEnd+xMod,sldrHt)
 			ptVals=[lgrey,ptPos,3] if x+min != vals[0] else [green,ptPos,4]
 			self.points.append(ptVals) #slider value indicators positions/colors
-
 	def draw(self):
 		color=white if self.active else dgrey
 		caption=smallFont.render(self.caption,1,color)
@@ -84,7 +100,6 @@ class Slider:
 		for x in range(len(self.points)):
 			pygame.draw.circle(screen,self.points[x][0],self.points[x][1],self.points[x][2])
 		pygame.display.update((x,y,w,h)) #(re)draw slider
-
 	def click(self):
 		area=int(self.points[1][1][0]-self.pos[1])/2
 		min=self.vals[1][0]
@@ -102,43 +117,8 @@ class Slider:
 		self.caption=self.caption.split(':')[0]+': '+str(self.vals[2].get(val)) #update slider caption
 		self.draw() #redraw slider to reflect changes
 
-	def hover(self):#implement later
-		#add tooltip dictionary, search by object type, id/caption value
-		(mouseX,mouseY)=mousePos
-		if 'Competitor' in self.caption:
-			text='Number of opposing players'
-		elif 'Difficulty' in self.caption:
-			text='corresponding computer difficulty' #change
-		else:
-			text='Default ToolTip'
-		caption=tinyFont.render(text,1,lgrey)
-		(x,y)=(mouseX+5,mouseY+5)
-		(w,h)=(caption.get_width(),caption.get_height())
-		screen.blit(caption,(x,y))
-		pygame.display.update((x,y,w,h))
-
-class Label:
-	global screen, width, height
-	def __init__(self,pos,color,text,font,centered=False):
-		self.pos=pos #as (x,y)
-		self.color=color #as (r,g,b)
-		self.text=text #as string
-		caption=font.render(text,1,color)
-		height=caption.get_height()
-		self.font=(font,caption,height) #as font
-		self.centered=centered #as boolean
-
-	def draw(self):
-		w=self.font[1].get_width()+15
-		h=self.font[1].get_height()+15
-		lblRect = (self.pos[0],self.pos[1],w,h)
-		ctrPos=self.font[1].get_rect(center=(self.pos))
-		pos=ctrPos if self.centered else self.pos
-		screen.blit(self.font[1],pos)
-		pygame.display.update(lblRect)
-
 class TextButton:
-	global screen, width, height
+	global screen,width,height,mousePos,sfName,listComps,listSlaps,dictHands
 	def __init__(self,id,pos,font,caption='Default'):
 		self.id=id
 		self.caption=caption #as string
@@ -148,7 +128,6 @@ class TextButton:
 		(w,h)=(captionText.get_width()+15,captionText.get_height()+15)
 		self.pos=[x,y,(w,h)] #list form so x and y can change as needed
 		self.active=True #as boolean; default=True
-
 	def draw(self):
 		(x,y,(w,h))=self.pos
 		captionText=self.font.render(self.caption,1,black)
@@ -156,17 +135,21 @@ class TextButton:
 		color=lgrey if self.active else dgrey
 		pygame.draw.rect(screen,color,(x,y,w,h))
 		screen.blit(captionText,captionPos)
-
 	def click(self):
+		sfERS=open(sfName,'w+')
 		if self.id=='tbNg':
-			#set up new game using player inputs
-			#look for save file in relevant directory
-			#if none exists, create one
-			#if one exists, overwrite
-			#for rule in rules:
-			#if rule[1]:
-			#add rule to save file
-			#add rule to gameplay dictionary
+			list=dictScreen[1][1]
+			#set up save file
+			for item in list:
+				if 'sldr' in item and item!='sldrCount':
+					competitor.append((item,item.active,item.val[0]))
+				elif 'cb' in item and item!='cbSlap':
+					listSlaps.append((item,item.active,item.val))
+			lines=competitor+listSlaps
+			for line in lines:
+				if line[1]:
+					sfERS.write(str(line[0])+': '+str(line[2]))
+			sfERS.close()
 			print('start new game')
 			screenChange(2)
 		elif self.id=='tbCg':
@@ -182,9 +165,10 @@ class TextButton:
 				screenChange(1)
 			elif self.caption=='No':
 				screenChange(2)
+		sfERS.close()
 
 class Checkbox:
-	global screen, width, height
+	global screen,width,height
 	def __init__(self,id,pos,caption):
 		self.id=id
 		self.caption=caption #as string
@@ -193,7 +177,6 @@ class Checkbox:
 		self.pos=(pos[0],pos[1],w,h) #pos as (x,y)
 		self.val=False #as boolean; default False
 		self.active=False #as boolean; default False
-
 	def draw(self):
 		(x,y,w,h)=self.pos
 		color=white if self.active else dgrey
@@ -206,12 +189,11 @@ class Checkbox:
 		x+=h
 		screen.blit(cbText,(x,y)) #caption
 		pygame.display.update(self.pos)
-
 	def click(self):
 		self.val=not self.val #toggle value
 		self.draw()
 
-class PlayPause: #draw menu screen icon
+class PlayButton: #draw menu screen icon
 	global screen,width,height,mousePos
 	def __init__(self,id,pos,size):
 		self.id=id
@@ -219,7 +201,6 @@ class PlayPause: #draw menu screen icon
 		self.size=size #as int (because square)
 		self.paused=False #as boolean; default "Pause"; pause icon shows
 		self.active=True #as boolean; always True
-
 	def draw(self):
 		(x,y,z)=(self.pos[0],self.pos[1],self.size)
 		bounds=(x,y,z,z)
@@ -238,7 +219,6 @@ class PlayPause: #draw menu screen icon
 			pygame.draw.rect(screen,white,rect1)
 			pygame.draw.rect(screen,white,rect2)
 		pygame.display.update(bounds)
-
 	def click(self):
 		if self.paused:
 			print('3\n2\n1\nrestart game') #placeholder
@@ -259,8 +239,8 @@ class PlayPause: #draw menu screen icon
 			while not chosen:
 				if event.type==pygame.MOUSEBUTTONDOWN and event.button==1:
 					clicked=True
-				if clicked and areaClick(mousePos)!='':
-					dict[areaClick(mousePos)].click()
+				if clicked and objCheck(mousePos)!='':
+					dict[objCheck(mousePos)].click()
 					chosen=True
 		self.paused=not self.paused #toggle
 		self.draw()
@@ -271,11 +251,8 @@ class DialogBox:
 		self.id=id #as string; use to differentiate between boxes on same screen
 		self.msg=msg #msg as string
 		self.opts=opts #opts as list of button captions; 2 max
-
 	def draw(self):
-		for list in dictScreen:
-			if dictScreen[list][0]:
-				active=list #find active screen
+		active=screenCheck() #find active screen
 		msg=smallFont.render(self.msg,1,black) #display message
 		msgW,msgH=msg.get_width(),msg.get_height()
 		msgX=(width-msg.get_width())/2
@@ -320,7 +297,7 @@ dictDiff={
 	3: 'Hard'
 }
 
-dictRules={
+dictSlaps={
 	1: 'Doubles',
 	2: 'Sandwiches',
 	3: 'Hoagies',
@@ -369,20 +346,33 @@ cbSlap=Checkbox('cbSlap',(newX,newY),'Slaps?') #master checkbox
 dictScreen[1][1].update({cbSlap.id:cbSlap}) #add to Lobby screen index
 newX+=width/25
 yMod=smallFont.render(cbSlap.caption,1,white).get_height()+int(height/50)
-for x in range(len(dictRules)):
+for x in range(len(dictSlaps)):
 	newY+=yMod
-	cbRule=Checkbox('cbRule'+str(x+1),(newX,newY),dictRules[x+1]) #individual rule checkbox
+	cbRule=Checkbox('cbRule'+str(x+1),(newX,newY),dictSlaps[x+1]) #individual rule checkbox
 	dictScreen[1][1].update({cbRule.id:cbRule}) #add to Lobby screen index
+
+#save file check
+sfName='sfERS.txt'
+sfERS=open(sfName,'w+')
+sfText=sfERS.read()
+sfERS.close()
 #End Lobby screen items
 
 #Game screen
 dictScreen.update({2:[False,{}]}) #prep index of Game screen items; initially hidden
-pbGame=PlayPause('pbGame',(17*width/20,height/20),width/11) #play/pause button
+pbGame=PlayButton('pbGame',(17*width/20,height/20),width/11) #play/pause button
 dictScreen[2][1].update({pbGame.id:pbGame}) #add to Game screen index
+#played card area (rounded rect)
+#hand track (same color as bg; not visible)
+#hands (number of hands=compCount+1)
+#card representation (rounded rect,smaller than main)
+#player name above
+#number of cards in hand below
+#sidebar on right to track played cards, hand results
 #END OBJECT RENDER DEFINITIONS
 
 #BEGIN GAMEPLAY FUNCTIONS
-def screenChange(screenNum): #draws game screen; screenNum as int
+def screenChange(screenNum): #draws menu or game screen; screenNum as int
 	screen.fill(black)
 	items=['sldr','cb','tb','pb']
 	for list in dictScreen:
@@ -402,54 +392,57 @@ def screenChange(screenNum): #draws game screen; screenNum as int
 		dictScreen[screenNum][1][obj].draw() #draw each visible object
 	pygame.display.update()
 
-def areaClick(pos): #returns dictScreen key of clicked object; pos as (x,y)
+def screenCheck(): #check which screen is active
+	screen=0
+	for list in dictScreen:
+		screen=dictScreen[list][0] if dictScreen[list][0] else 0
+		if screen!=0: break
+	return screen
+
+def objCheck(pos): #returns dictScreen key of clicked object; pos as (x,y)
 	global mousePos
 	x1=x2=y1=y2=0
 	(mouseX,mouseY)=mousePos
-	for list in dictScreen:
-		if dictScreen[list][0]:
-			dict=dictScreen[list][1]
-			for obj in dict: #check if active area was clicked
-				if 'sldr' in obj: #slider
-					x1,x2=dict[obj].pos[0][0],dict[obj].pos[2]
-					y1,y2=dict[obj].pos[3]-15,dict[obj].pos[3]+15
-				elif 'cb' in obj: #checkbox
-					x1,x2=dict[obj].pos[0],dict[obj].pos[0]+dict[obj].pos[2]
-					y1,y2=dict[obj].pos[1],dict[obj].pos[1]+dict[obj].pos[3]
-				elif 'tb' in obj: #textbox
-					x1,x2=dict[obj].pos[0],dict[obj].pos[0]+dict[obj].pos[2][0]
-					y1,y2=dict[obj].pos[1],dict[obj].pos[1]+dict[obj].pos[2][1]
-				elif 'pb' in obj: #playpause
-					x1,x2=dict[obj].pos[0],dict[obj].pos[0]+dict[obj].size
-					y1,y2=dict[obj].pos[1],dict[obj].pos[1]+dict[obj].size
-				else:
-					continue
-				area=obj if (x1<mouseX<x2 and y1<mouseY<y2) else ''
-				if area!='': break
+	dict=dictScreen[screenCheck()][1]
+	for obj in dict: #check if active area was clicked
+		if 'sldr' in obj: #slider
+			x1,x2=dict[obj].pos[0][0],dict[obj].pos[2]
+			y1,y2=dict[obj].pos[3]-15,dict[obj].pos[3]+15
+		elif 'cb' in obj: #checkbox
+			x1,x2=dict[obj].pos[0],dict[obj].pos[0]+dict[obj].pos[2]
+			y1,y2=dict[obj].pos[1],dict[obj].pos[1]+dict[obj].pos[3]
+		elif 'tb' in obj: #textbutton
+			x1,x2=dict[obj].pos[0],dict[obj].pos[0]+dict[obj].pos[2][0]
+			y1,y2=dict[obj].pos[1],dict[obj].pos[1]+dict[obj].pos[2][1]
+		elif 'pb' in obj: #playpause
+			x1,x2=dict[obj].pos[0],dict[obj].pos[0]+dict[obj].size
+			y1,y2=dict[obj].pos[1],dict[obj].pos[1]+dict[obj].size
+		else:
+			continue
+		area=obj if (x1<mouseX<x2 and y1<mouseY<y2) else ''
+		if area!='': break #once the correct object is found, exit loop
 	return area
 
-def parentCheck(obj): #redraws any dependent objects; obj as str
-	global slaps
-	for list in dictScreen:
-		if dictScreen[list][0]:
-			dict=dictScreen[list][1]
-			item=dict.get(obj, '')
-			if item!='':
-				if 'sldr' in obj:
-					for diff in dict:
-						if 'sldrDiff' in diff:
-							dict[diff].active=True if \
-							int(diff.split('sldrDiff')[1])<=\
-							dict[obj].vals[0] else False
-							dict[diff].draw()
-				elif 'cb' in obj:
-					for rule in dict:
-						if 'cb' in rule and not rule.isalpha():
-							dict[rule].active=True if dict[obj].val \
-							else False
-							dict[rule].draw()
-				elif 'tb' in obj:
-					dict[obj].active=True if len(slaps)>0 or obj=='tbNg' else False
+def parentCheck(obj): #redraws any dependent objects; obj as str (object name)
+	global listSlaps
+	dict=dictScreen[screenCheck()][1]
+	item=dict.get(obj, '') #if object not in active screen, do nothing
+	if item!='':
+		if 'sldr' in obj:
+			for diff in dict:
+				if 'sldrDiff' in diff:
+					dict[diff].active=True if \
+					int(diff.split('sldrDiff')[1])<=\
+					dict[obj].vals[0] else False
+					dict[diff].draw()
+		elif 'cb' in obj:
+			for rule in dict:
+				if 'cb' in rule and not rule.isalpha():
+					dict[rule].active=True if dict[obj].val \
+					else False
+					dict[rule].draw()
+		elif 'tb' in obj:
+			dict[obj].active=True if len(sfText)>0 or obj=='tbNg' else False
 
 def rearrange(listInput,index):
 	listInput.append(listInput[index])
@@ -495,30 +488,28 @@ for x in range(random.randrange(5,11)): #shuffle cards
 	for y in range(len(deck)):
 		rearrange(deck,random.randrange(0,len(deck)))
 
-screen.fill(black)
-screenChange(1)
-clicked=scrolling=False
 
 #BEGIN GAME CODE
-while 1:
+screenChange(1) #activate lobby screen
+clicked=scrollUp=scrollDown=False
+
+while 1: #loop until sys.exit() is called
 	mousePos=pygame.mouse.get_pos()
 	for event in pygame.event.get():
 		if event.type==pygame.QUIT:
 			sys.exit()
 		elif event.type==pygame.MOUSEBUTTONDOWN and event.button==1:
 			clicked=True
-		if clicked:
-			for list in dictScreen:
-				if dictScreen[list][0]:
-					dict=dictScreen[list][1]
-					if areaClick(mousePos)!='':
-						obj=areaClick(mousePos)
-						if dict[obj].active:
-							dict[obj].click()
-						if 'lbl' not in obj and 'pb' not in obj \
-						and obj.isalpha():
-							parentCheck(obj)
-			clicked=False
+		dict=dictScreen[screenCheck()][1]
+		obj=objCheck(mousePos)
+		if obj!='':
+			if clicked: #only allow one click action per click
+				if dict[obj].active:
+					dict[obj].click()
+				if 'lbl' not in obj and 'pb' not in obj \
+				and 'db' not in obj and obj.isalpha():
+					parentCheck(obj) #change object.active as needed
+				clicked=False
 	#PRESERVE GAMEPLAY CODE BELOW
 	"""
 	human=0

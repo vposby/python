@@ -7,8 +7,7 @@ thirty digits long)
 
 #!!!write fix for magnitude not populating if zero in one's place
 
-import pprint
-import sys
+import pprint, sys
 
 numRef = open("numberTest.txt") #address of number/string reference file
 numInfo = {} #empty dictionary
@@ -64,7 +63,7 @@ while modeChosen == False:
 			elif invalid == 3:
 				print("You have made too many invalid entries. The program will now close.")
 				numRef.close
-				sys.exit()			
+				sys.exit()
 	elif mode == "exit":
 		numRef.close
 		sys.exit()
@@ -101,7 +100,7 @@ while outputGiven == False:
 			elif invalid == 3:
 				print("You have made too many invalid entries. The program will now close.")
 				sys.exit()
-			
+
 		else:
 			#add letters and whitespace to prohibited character list
 			prohibited = prohibited + alphabet + " " + alphabet.upper()
@@ -175,7 +174,7 @@ while outputGiven == False:
 				print("".join(numText))
 				outputGiven = True
 			#end digit to text conversion code
-		
+
 	#if number is entered as text
 	else:
 		#ask for user input
